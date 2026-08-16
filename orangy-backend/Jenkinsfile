@@ -13,10 +13,10 @@ pipeline {
                 script {
                     // Navigate into the backend folder before building
                     dir('orangy-backend') {
-                        // Build the Docker image with the dev-latest tag
-                        docker.withRegistry('https://ghcr.io', GHCR_CREDENTIALS_ID) {
-                            def customImage = docker.build("${IMAGE_NAME}:dev-latest")
-                            customImage.push()
+                        withCredentials([usernamePassword(credentialsId: GHCR_CREDENTIALS_ID, passwordVariable: 'GHCR_PASS', usernameVariable: 'GHCR_USER')]) {
+                            sh 'echo "$GHCR_PASS" | docker login ghcr.io -u "$GHCR_USER" --password-stdin'
+                            sh "docker build -t ${IMAGE_NAME}:dev-latest ."
+                            sh "docker push ${IMAGE_NAME}:dev-latest"
                         }
                     }
                 }
