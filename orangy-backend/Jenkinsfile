@@ -11,7 +11,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout the dev branch
-                git branch: 'dev', url: 'https://github.com/vedantkhursange/orangy-backend.git'
+                git branch: 'DEV', url: 'https://github.com/vedantkhursange/orangy-backend.git'
             }
         }
 
