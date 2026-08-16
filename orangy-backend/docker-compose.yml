@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: orangy-postgres
+    environment:
+      POSTGRES_DB: orangy_db
+      POSTGRES_USER: orangy
+      POSTGRES_PASSWORD: orangy_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - orangy_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    container_name: orangy-mongo
+    environment:
+      MONGO_INITDB_DATABASE: orangy_media
+    ports:
+      - "27017:27017"
+    volumes:
+      - orangy_mongodata:/data/db
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: orangy-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - orangy_redisdata:/data
+    restart: unless-stopped
+
+volumes:
+  orangy_pgdata:
+  orangy_mongodata:
+  orangy_redisdata:

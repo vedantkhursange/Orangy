@@ -1,0 +1,38 @@
+spring:
+  # PostgreSQL (use when Docker is running)
+  # datasource:
+  #   url: jdbc:postgresql://localhost:5432/orangy_db
+  #   username: orangy
+  #   password: orangy_secret
+  #   driver-class-name: org.postgresql.Driver
+
+  # Fallback: uncomment H2 and comment out PostgreSQL above if no Postgres available
+  datasource:
+    url: jdbc:h2:mem:orangy_db;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  # H2 Console (only for dev when using H2)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # MongoDB
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/orangy_media
+    redis:
+      host: localhost
+      port: 6379
+
+logging:
+  level:
+    com.orangy: DEBUG
+    org.springframework.security: DEBUG
