@@ -8,21 +8,16 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                // Checkout the dev branch
-                git branch: 'DEV', url: 'https://github.com/vedantkhursange/orangy-backend.git'
-            }
-        }
-
         stage('Build & Push Docker Image') {
             steps {
                 script {
-                    // Build the Docker image with the dev-latest tag
-                    // (Note: In a full production setup, you would tag with the GIT_COMMIT hash)
-                    docker.withRegistry('https://ghcr.io', GHCR_CREDENTIALS_ID) {
-                        def customImage = docker.build("${IMAGE_NAME}:dev-latest")
-                        customImage.push()
+                    // Navigate into the backend folder before building
+                    dir('orangy-backend') {
+                        // Build the Docker image with the dev-latest tag
+                        docker.withRegistry('https://ghcr.io', GHCR_CREDENTIALS_ID) {
+                            def customImage = docker.build("${IMAGE_NAME}:dev-latest")
+                            customImage.push()
+                        }
                     }
                 }
             }
