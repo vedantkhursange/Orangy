@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+
+    environment {
+        // We will configure these secrets in Jenkins later
+        GHCR_CREDENTIALS_ID = 'ghcr-login'
+        IMAGE_NAME = 'ghcr.io/vedantkhursange/orangy-backend'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Checkout the dev branch
+                git branch: 'dev', url: 'https://github.com/vedantkhursange/orangy-backend.git'
+            }
+        }
+
+        stage('Build & Push Docker Image') {
+            steps {
+                script {
+                    // Build the Docker image with the dev-latest tag
+                    // (Note: In a full production setup, you would tag with the GIT_COMMIT hash)
+                    docker.withRegistry('https://ghcr.io', GHCR_CREDENTIALS_ID) {
+                        def customImage = docker.build("${IMAGE_NAME}:dev-latest")
+                        customImage.push()
+                    }
+                }
+            }
+        }
+
+        stage('Deploy (Trigger ArgoCD)') {
+            steps {
+                script {
+                    // Since ArgoCD monitors our manifests, pushing the image to GHCR is enough.
+                    // However, we can run a kubectl command to force a restart to pull the new image immediately.
+                    sh 'kubectl rollout restart deployment backend -n orangy-dev'
+                }
+            }
+        }
+    }
+}
