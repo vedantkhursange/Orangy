@@ -1,0 +1,11 @@
+.git
+.gitignore
+.vscode
+.idea
+target/
+*.jar
+*.war
+*.class
+src/test/
+Dockerfile
+.dockerignore
