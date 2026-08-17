@@ -21,18 +21,21 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductVariantRepository variantRepository;
 
+    @Transactional(readOnly = true)
     public Page<ProductSummaryResponse> listProducts(String category, BigDecimal minPrice,
                                                       BigDecimal maxPrice, Pageable pageable) {
         return productRepository.findFiltered(category, minPrice, maxPrice, pageable)
                 .map(this::toSummary);
     }
 
+    @Transactional(readOnly = true)
     public ProductResponse getProduct(UUID id) {
         Product product = productRepository.findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + id));
         return toFullResponse(product);
     }
 
+    @Transactional(readOnly = true)
     public List<VariantResponse> getVariants(UUID productId) {
         productRepository.findByIdAndIsActiveTrue(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
