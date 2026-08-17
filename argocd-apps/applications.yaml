@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: orangy-dev
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/vedantkhursange/orangy-k8s-manifests.git'
+    path: overlays/dev
+    targetRevision: main
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: orangy-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: orangy-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/vedantkhursange/orangy-k8s-manifests.git'
+    path: overlays/prod
+    targetRevision: main
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: orangy-prod
+  syncPolicy:
+    # Manual sync for prod
+    syncOptions:
+      - CreateNamespace=true
