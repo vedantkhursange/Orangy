@@ -31,404 +31,198 @@
         },
         {
             "name": "Auth",
-            "description": "Authentication \u2014 signup, login, token refresh",
+            "description": "Authentication \u2014 signup, login, OTP verify, token refresh",
             "item": [
                 {
-                    "id": "87dd23e6-cd75-42a5-85c3-e35c76bb7bee",
-                    "name": "Register a new customer account",
+                    "name": "1. Signup (Request OTP)",
                     "request": {
-                        "name": "Register a new customer account",
-                        "description": {},
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"johndoe@example.com\",\n  \"password\": \"SecretPass123!\",\n  \"phone\": \"+1234567890\"\n}"
+                        },
                         "url": {
+                            "raw": "{{baseUrl}}/api/auth/signup",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
                             "path": [
                                 "api",
                                 "auth",
                                 "signup"
-                            ],
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "query": [],
-                            "variable": []
-                        },
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "2. Login (Request OTP)",
+                    "request": {
+                        "method": "POST",
                         "header": [
                             {
                                 "key": "Content-Type",
                                 "value": "application/json"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "*/*"
                             }
                         ],
-                        "method": "POST",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"email\": \"<string>\",\n  \"name\": \"<string>\",\n  \"password\": \"<string>\",\n  \"phone\": \"<string>\"\n}",
-                            "options": {
-                                "raw": {
-                                    "headerFamily": "json",
-                                    "language": "json"
-                                }
-                            }
+                            "raw": "{\n  \"email\": \"johndoe@example.com\",\n  \"password\": \"SecretPass123!\"\n}"
                         },
-                        "auth": null
-                    },
-                    "response": [
-                        {
-                            "id": "80232512-c6fd-478e-83d4-a60571cf9a6c",
-                            "name": "OK",
-                            "originalRequest": {
-                                "url": {
-                                    "path": [
-                                        "api",
-                                        "auth",
-                                        "signup"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [],
-                                    "variable": []
-                                },
-                                "header": [
-                                    {
-                                        "key": "Content-Type",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "key": "Accept",
-                                        "value": "*/*"
-                                    },
-                                    {
-                                        "description": {
-                                            "content": "Added as a part of security scheme: bearer",
-                                            "type": "text/plain"
-                                        },
-                                        "key": "Authorization",
-                                        "value": "Bearer <token>"
-                                    }
-                                ],
-                                "method": "POST",
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n  \"email\": \"<string>\",\n  \"name\": \"<string>\",\n  \"password\": \"<string>\",\n  \"phone\": \"<string>\"\n}",
-                                    "options": {
-                                        "raw": {
-                                            "headerFamily": "json",
-                                            "language": "json"
-                                        }
-                                    }
-                                }
-                            },
-                            "status": "OK",
-                            "code": 200,
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "*/*"
-                                }
-                            ],
-                            "body": "{\n  \"success\": \"<boolean>\",\n  \"data\": {\n    \"accessToken\": \"<string>\",\n    \"refreshToken\": \"<string>\",\n    \"userId\": \"<uuid>\",\n    \"name\": \"<string>\",\n    \"role\": \"<string>\"\n  },\n  \"error\": \"<string>\"\n}",
-                            "cookie": [],
-                            "_postman_previewlanguage": "text"
-                        }
-                    ],
-                    "event": [],
-                    "protocolProfileBehavior": {
-                        "disableBodyPruning": true
-                    }
-                },
-                {
-                    "id": "32fcf71e-7f1e-4849-b2fc-2c6a0cdf4c9e",
-                    "name": "Get a new access token using a refresh token",
-                    "request": {
-                        "name": "Get a new access token using a refresh token",
-                        "description": {},
                         "url": {
-                            "path": [
-                                "api",
-                                "auth",
-                                "refresh"
-                            ],
+                            "raw": "{{baseUrl}}/api/auth/login",
                             "host": [
                                 "{{baseUrl}}"
                             ],
-                            "query": [],
-                            "variable": []
-                        },
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "*/*"
-                            }
-                        ],
-                        "method": "POST",
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"refreshToken\": \"<string>\"\n}",
-                            "options": {
-                                "raw": {
-                                    "headerFamily": "json",
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "auth": null
-                    },
-                    "response": [
-                        {
-                            "id": "ba76f293-7a6e-4421-afc3-5251b7d48b6e",
-                            "name": "OK",
-                            "originalRequest": {
-                                "url": {
-                                    "path": [
-                                        "api",
-                                        "auth",
-                                        "refresh"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [],
-                                    "variable": []
-                                },
-                                "header": [
-                                    {
-                                        "key": "Content-Type",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "key": "Accept",
-                                        "value": "*/*"
-                                    },
-                                    {
-                                        "description": {
-                                            "content": "Added as a part of security scheme: bearer",
-                                            "type": "text/plain"
-                                        },
-                                        "key": "Authorization",
-                                        "value": "Bearer <token>"
-                                    }
-                                ],
-                                "method": "POST",
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n  \"refreshToken\": \"<string>\"\n}",
-                                    "options": {
-                                        "raw": {
-                                            "headerFamily": "json",
-                                            "language": "json"
-                                        }
-                                    }
-                                }
-                            },
-                            "status": "OK",
-                            "code": 200,
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "*/*"
-                                }
-                            ],
-                            "body": "{\n  \"success\": \"<boolean>\",\n  \"data\": {\n    \"accessToken\": \"<string>\",\n    \"refreshToken\": \"<string>\",\n    \"userId\": \"<uuid>\",\n    \"name\": \"<string>\",\n    \"role\": \"<string>\"\n  },\n  \"error\": \"<string>\"\n}",
-                            "cookie": [],
-                            "_postman_previewlanguage": "text"
-                        }
-                    ],
-                    "event": [],
-                    "protocolProfileBehavior": {
-                        "disableBodyPruning": true
-                    }
-                },
-                {
-                    "id": "e9414be1-1dd5-4d20-b61a-cbd86cd790b1",
-                    "name": "Login with email and password",
-                    "request": {
-                        "name": "Login with email and password",
-                        "description": {},
-                        "url": {
                             "path": [
                                 "api",
                                 "auth",
                                 "login"
-                            ],
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "query": [],
-                            "variable": []
-                        },
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "3. Verify OTP",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "if(jsonData.data && jsonData.data.accessToken) {",
+                                    "    pm.environment.set(\"access_token\", jsonData.data.accessToken);",
+                                    "    pm.environment.set(\"refresh_token\", jsonData.data.refreshToken);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
                         "header": [
                             {
                                 "key": "Content-Type",
                                 "value": "application/json"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "*/*"
                             }
                         ],
-                        "method": "POST",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"email\": \"<string>\",\n  \"password\": \"<string>\"\n}",
-                            "options": {
-                                "raw": {
-                                    "headerFamily": "json",
-                                    "language": "json"
-                                }
-                            }
+                            "raw": "{\n  \"email\": \"johndoe@example.com\",\n  \"otp\": \"123456\",\n  \"purpose\": \"LOGIN\"\n}"
                         },
-                        "auth": null
-                    },
-                    "response": [
-                        {
-                            "id": "66bfbbea-2f77-423e-9af9-7f27e1aca847",
-                            "name": "OK",
-                            "originalRequest": {
-                                "url": {
-                                    "path": [
-                                        "api",
-                                        "auth",
-                                        "login"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [],
-                                    "variable": []
-                                },
-                                "header": [
-                                    {
-                                        "key": "Content-Type",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "key": "Accept",
-                                        "value": "*/*"
-                                    },
-                                    {
-                                        "description": {
-                                            "content": "Added as a part of security scheme: bearer",
-                                            "type": "text/plain"
-                                        },
-                                        "key": "Authorization",
-                                        "value": "Bearer <token>"
-                                    }
-                                ],
-                                "method": "POST",
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n  \"email\": \"<string>\",\n  \"password\": \"<string>\"\n}",
-                                    "options": {
-                                        "raw": {
-                                            "headerFamily": "json",
-                                            "language": "json"
-                                        }
-                                    }
-                                }
-                            },
-                            "status": "OK",
-                            "code": 200,
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "*/*"
-                                }
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/verify-otp",
+                            "host": [
+                                "{{baseUrl}}"
                             ],
-                            "body": "{\n  \"success\": \"<boolean>\",\n  \"data\": {\n    \"accessToken\": \"<string>\",\n    \"refreshToken\": \"<string>\",\n    \"userId\": \"<uuid>\",\n    \"name\": \"<string>\",\n    \"role\": \"<string>\"\n  },\n  \"error\": \"<string>\"\n}",
-                            "cookie": [],
-                            "_postman_previewlanguage": "text"
+                            "path": [
+                                "api",
+                                "auth",
+                                "verify-otp"
+                            ]
                         }
-                    ],
-                    "event": [],
-                    "protocolProfileBehavior": {
-                        "disableBodyPruning": true
                     }
                 },
                 {
-                    "id": "4eff9845-54be-4e03-b16f-fa520ac9b9cf",
-                    "name": "Get current logged-in user's profile",
+                    "name": "4. Refresh Token",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "if(jsonData.data && jsonData.data.accessToken) {",
+                                    "    pm.environment.set(\"access_token\", jsonData.data.accessToken);",
+                                    "    pm.environment.set(\"refresh_token\", jsonData.data.refreshToken);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
                     "request": {
-                        "name": "Get current logged-in user's profile",
-                        "description": {},
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+                        },
                         "url": {
+                            "raw": "{{baseUrl}}/api/auth/refresh",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "refresh"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "5. Get Current User (Me)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/me",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
                             "path": [
                                 "api",
                                 "auth",
                                 "me"
-                            ],
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "6. Resend OTP",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"johndoe@example.com\",\n  \"purpose\": \"LOGIN\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/resend-otp",
                             "host": [
                                 "{{baseUrl}}"
                             ],
-                            "query": [],
-                            "variable": []
-                        },
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "*/*"
-                            }
-                        ],
-                        "method": "GET",
-                        "body": {},
-                        "auth": null
-                    },
-                    "response": [
-                        {
-                            "id": "07fc44cd-32a3-4843-81a0-8d265bf81c66",
-                            "name": "OK",
-                            "originalRequest": {
-                                "url": {
-                                    "path": [
-                                        "api",
-                                        "auth",
-                                        "me"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [],
-                                    "variable": []
-                                },
-                                "header": [
-                                    {
-                                        "key": "Accept",
-                                        "value": "*/*"
-                                    },
-                                    {
-                                        "description": {
-                                            "content": "Added as a part of security scheme: bearer",
-                                            "type": "text/plain"
-                                        },
-                                        "key": "Authorization",
-                                        "value": "Bearer <token>"
-                                    }
-                                ],
-                                "method": "GET",
-                                "body": {}
-                            },
-                            "status": "OK",
-                            "code": 200,
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "*/*"
-                                }
-                            ],
-                            "body": "{\n  \"success\": \"<boolean>\",\n  \"data\": {\n    \"id\": \"<uuid>\",\n    \"name\": \"<string>\",\n    \"email\": \"<string>\",\n    \"phone\": \"<string>\",\n    \"role\": \"<string>\"\n  },\n  \"error\": \"<string>\"\n}",
-                            "cookie": [],
-                            "_postman_previewlanguage": "text"
+                            "path": [
+                                "api",
+                                "auth",
+                                "resend-otp"
+                            ]
                         }
-                    ],
-                    "event": [],
-                    "protocolProfileBehavior": {
-                        "disableBodyPruning": true
                     }
                 }
             ]

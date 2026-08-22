@@ -4,6 +4,7 @@ import com.orangy.auth.dto.AuthResponse;
 import com.orangy.auth.dto.LoginRequest;
 import com.orangy.auth.dto.OtpResponse;
 import com.orangy.auth.dto.OtpVerifyRequest;
+import com.orangy.auth.dto.ResendOtpRequest;
 import com.orangy.auth.dto.SignupRequest;
 import com.orangy.auth.dto.UserProfileResponse;
 import com.orangy.common.exception.BadRequestException;
@@ -93,6 +94,27 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return buildAuthResponse(user);
+    }
+
+    /**
+     * Resend OTP for either SIGNUP or LOGIN.
+     */
+    public OtpResponse resendOtp(ResendOtpRequest request) {
+        // User must exist in the DB for both signup and login at this point
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if ("LOGIN".equalsIgnoreCase(request.getPurpose()) && !user.isEmailVerified()) {
+            throw new BadRequestException("Please verify your email before logging in");
+        }
+
+        String otp = otpService.generateOtp(request.getEmail(), request.getPurpose());
+        emailService.sendOtpEmail(request.getEmail(), otp, request.getPurpose());
+        return OtpResponse.builder()
+                .message("OTP resent to email")
+                .email(request.getEmail())
+                .otpExpirySeconds(otpService.getOtpExpirySeconds())
+                .build();
     }
 
     /**

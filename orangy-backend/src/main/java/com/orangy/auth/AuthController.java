@@ -3,6 +3,7 @@ package com.orangy.auth;
 import com.orangy.auth.dto.AuthResponse;
 import com.orangy.auth.dto.LoginRequest;
 import com.orangy.auth.dto.OtpResponse;
+import com.orangy.auth.dto.ResendOtpRequest;
 import com.orangy.auth.dto.OtpVerifyRequest;
 import com.orangy.auth.dto.RefreshTokenRequest;
 import com.orangy.auth.dto.SignupRequest;
@@ -47,6 +48,14 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> verifyOtp(
             @Valid @RequestBody OtpVerifyRequest request) {
         AuthResponse response = authService.verifyOtp(request);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/resend-otp")
+    @Operation(summary = "Resend OTP for signup or login")
+    public ResponseEntity<ApiResponse<OtpResponse>> resendOtp(
+            @Valid @RequestBody ResendOtpRequest request) {
+        OtpResponse response = authService.resendOtp(request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
