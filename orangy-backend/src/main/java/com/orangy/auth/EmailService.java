@@ -23,7 +23,7 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-    @Value("${app.otp.expiry-seconds:45}")
+    @Value("${app.otp.expiry-seconds:300}")
     private int otpExpirySeconds;
 
     /**

@@ -114,7 +114,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"email\": \"johndoe@example.com\",\n  \"otp\": \"123456\",\n  \"purpose\": \"LOGIN\"\n}"
+                            "raw": "{\n  \"email\": \"johndoe@example.com\",\n  \"otp\": \"123456\",\n  \"purpose\": \"SIGNUP\"\n}"
                         },
                         "url": {
                             "raw": "{{baseUrl}}/api/auth/verify-otp",

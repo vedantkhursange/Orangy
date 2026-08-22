@@ -13,5 +13,6 @@ public class OtpResponse {
 
     private String message;
     private String email;
+    private String purpose;
     private int otpExpirySeconds;
 }

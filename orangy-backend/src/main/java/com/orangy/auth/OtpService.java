@@ -22,7 +22,7 @@ public class OtpService {
 
     private final StringRedisTemplate redisTemplate;
 
-    @Value("${app.otp.expiry-seconds:45}")
+    @Value("${app.otp.expiry-seconds:300}")
     private int otpExpirySeconds;
 
     @Value("${app.otp.length:6}")

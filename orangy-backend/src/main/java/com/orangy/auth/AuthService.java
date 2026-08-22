@@ -52,6 +52,7 @@ public class AuthService {
         return OtpResponse.builder()
                 .message("OTP sent to email for verification")
                 .email(request.getEmail())
+                .purpose("SIGNUP")
                 .otpExpirySeconds(otpService.getOtpExpirySeconds())
                 .build();
     }
@@ -73,6 +74,7 @@ public class AuthService {
         return OtpResponse.builder()
                 .message("OTP sent to email for login")
                 .email(request.getEmail())
+                .purpose("LOGIN")
                 .otpExpirySeconds(otpService.getOtpExpirySeconds())
                 .build();
     }
@@ -113,6 +115,7 @@ public class AuthService {
         return OtpResponse.builder()
                 .message("OTP resent to email")
                 .email(request.getEmail())
+                .purpose(request.getPurpose())
                 .otpExpirySeconds(otpService.getOtpExpirySeconds())
                 .build();
     }

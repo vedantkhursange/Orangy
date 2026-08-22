@@ -55,7 +55,7 @@ app:
 
   # OTP
   otp:
-    expiry-seconds: ${OTP_EXPIRY_SECONDS:45}
+    expiry-seconds: ${OTP_EXPIRY_SECONDS:300}
     length: ${OTP_LENGTH:6}
 
   # Jackson
