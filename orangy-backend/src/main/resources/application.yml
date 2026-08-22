@@ -18,11 +18,18 @@ spring:
       hibernate:
         format_sql: true
 
-  # Jackson
-  jackson:
-    serialization:
-      write-dates-as-timestamps: false
-    default-property-inclusion: non_null
+  # Mail (Gmail SMTP)
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:khursangevedant@gmail.com}
+    password: ${MAIL_PASSWORD:gddu hlzk lkhh yten}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 # JWT Configuration
 app:
@@ -39,6 +46,23 @@ app:
   # CORS
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+
+  # Admin Seeder
+  admin:
+    email: ${ADMIN_EMAIL:admin@orangy.com}
+    password: ${ADMIN_DEFAULT_PASSWORD:admin123}
+    notification-email: ${ADMIN_NOTIFICATION_EMAIL:khursangevedant@gmail.com}
+
+  # OTP
+  otp:
+    expiry-seconds: ${OTP_EXPIRY_SECONDS:45}
+    length: ${OTP_LENGTH:6}
+
+  # Jackson
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
 
 # Swagger / OpenAPI
 springdoc:

@@ -2,10 +2,12 @@ package com.orangy.auth;
 
 import com.orangy.auth.dto.AuthResponse;
 import com.orangy.auth.dto.LoginRequest;
+import com.orangy.auth.dto.OtpResponse;
+import com.orangy.auth.dto.OtpVerifyRequest;
 import com.orangy.auth.dto.RefreshTokenRequest;
 import com.orangy.auth.dto.SignupRequest;
+import com.orangy.auth.dto.UserProfileResponse;
 import com.orangy.common.dto.ApiResponse;
-import com.orangy.user.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -18,25 +20,33 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@Tag(name = "Auth", description = "Authentication — signup, login, token refresh")
+@Tag(name = "Auth", description = "Authentication — signup, login, OTP verification, token refresh")
 public class AuthController {
 
     private final AuthService authService;
 
     @PostMapping("/signup")
-    @Operation(summary = "Register a new customer account")
-    public ResponseEntity<ApiResponse<AuthResponse>> signup(
+    @Operation(summary = "Register a new customer account — sends OTP to email")
+    public ResponseEntity<ApiResponse<OtpResponse>> signup(
             @Valid @RequestBody SignupRequest request) {
-        AuthResponse response = authService.signup(request);
+        OtpResponse response = authService.signup(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response));
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Login with email and password")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(
+    @Operation(summary = "Login with email and password — sends OTP to email")
+    public ResponseEntity<ApiResponse<OtpResponse>> login(
             @Valid @RequestBody LoginRequest request) {
-        AuthResponse response = authService.login(request);
+        OtpResponse response = authService.login(request);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/verify-otp")
+    @Operation(summary = "Verify OTP for signup or login — returns JWT tokens on success")
+    public ResponseEntity<ApiResponse<AuthResponse>> verifyOtp(
+            @Valid @RequestBody OtpVerifyRequest request) {
+        AuthResponse response = authService.verifyOtp(request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -52,14 +62,7 @@ public class AuthController {
     @Operation(summary = "Get current logged-in user's profile")
     public ResponseEntity<ApiResponse<UserProfileResponse>> me(
             @AuthenticationPrincipal AuthenticatedUser principal) {
-        User user = authService.getCurrentUser(principal);
-        UserProfileResponse profile = UserProfileResponse.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .role(user.getRole().name())
-                .build();
+        UserProfileResponse profile = authService.getCurrentUser(principal);
         return ResponseEntity.ok(ApiResponse.success(profile));
     }
 }

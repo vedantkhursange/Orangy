@@ -32,6 +32,10 @@ public class User {
 
     private String phone;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean emailVerified = false;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
