@@ -1,0 +1,15 @@
+{
+  "workspace": {
+    "id": "a963647f-fe0d-4d8d-8617-fbb56d67d230"
+  },
+  "entities": {
+    "environments": [],
+    "flows": [],
+    "globals": [],
+    "mocks": [],
+    "specs": [],
+    "collections": [
+      "../Orangy_Postman_Collection.json"
+    ]
+  }
+}
