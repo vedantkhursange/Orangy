@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import Reveal from "@/components/animations/Reveal";
 import { finalCta } from "@/data/site";
 
@@ -24,12 +25,12 @@ export default function FinalCta() {
           {finalCta.sub}
         </p>
         <div data-reveal className="mt-10 flex flex-wrap gap-4">
-          <button
-            type="button"
+          <Link
+            href="/products"
             className="rounded-full bg-orange px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-orange/30 transition hover:bg-orange-deep"
           >
             {finalCta.primary}
-          </button>
+          </Link>
           <a
             href="#home"
             className="rounded-full border border-cream/40 px-8 py-4 text-sm font-semibold text-cream-soft backdrop-blur-sm transition hover:border-cream/80 hover:bg-cream/10"

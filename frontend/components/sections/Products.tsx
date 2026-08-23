@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import Reveal from "@/components/animations/Reveal";
 import { products } from "@/data/site";
@@ -54,13 +55,13 @@ export default function Products() {
                     <span className="display text-3xl font-bold text-orange-deep">{p.price}</span>
                     <span className="text-sm text-ink/50">{p.unit}</span>
                   </div>
-                  <button
-                    type="button"
+                  <Link
+                    href="/products"
                     className="group mt-7 inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 text-sm font-semibold text-cream-soft transition hover:bg-orange-deep"
                   >
-                    Add to Basket
+                    Shop the Harvest
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                  </button>
+                  </Link>
                 </div>
               </article>
             </Reveal>

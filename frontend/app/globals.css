@@ -21,6 +21,21 @@
   --dusk-2: #291a0c;
 }
 
+/* Dark mode flips the semantic tokens; orange accents stay identical. */
+.dark {
+  --cream: #16110c;
+  --cream-soft: #1c1610;
+  --sand: #241c14;
+  --orange-deep: #ff9440;
+  --leaf: #6da367;
+  --earth: #c4a88f;
+  --ink: #f2e9dd;
+  --dusk: #0e0a06;
+  --dusk-2: #171006;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --color-cream: var(--cream);
   --color-cream-soft: var(--cream-soft);
