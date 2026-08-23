@@ -8,6 +8,8 @@ import type { NextConfig } from "next";
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://130.210.4.172:30080";
 
 const nextConfig: NextConfig = {
+  // Standalone server bundle for the Docker image (node server.js)
+  output: "standalone",
   async rewrites() {
     return [
       {
