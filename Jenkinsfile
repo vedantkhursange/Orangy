@@ -24,7 +24,7 @@ pipeline {
             steps {
                 script {
                     // Build only what changed; build everything on the first run
-                    def changed = sh(script: "git diff --name-only HEAD~1 HEAD || echo all", returnStdout: true).trim()
+                    def changed = sh(script: "git diff --name-only HEAD~5 HEAD 2>/dev/null || echo all", returnStdout: true).trim()
                     env.BUILD_BACKEND = (changed == 'all' || changed.contains('orangy-backend/')) ? 'true' : 'false'
                     env.BUILD_FRONTEND = (changed == 'all' || changed.contains('frontend/')) ? 'true' : 'false'
                     echo "Backend build: ${env.BUILD_BACKEND} | Frontend build: ${env.BUILD_FRONTEND}"
