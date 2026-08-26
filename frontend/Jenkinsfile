@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+
+    environment {
+        // Reuses the same GHCR credential already configured for the backend job
+        GHCR_CREDENTIALS_ID = 'ghcr-login'
+        IMAGE_NAME = 'ghcr.io/vedantkhursange/orangy-frontend'
+    }
+
+    stages {
+        stage('Build & Push Docker Image') {
+            steps {
+                script {
+                    // Navigate into the frontend folder before building
+                    dir('frontend') {
+                        withCredentials([usernamePassword(credentialsId: GHCR_CREDENTIALS_ID, passwordVariable: 'GHCR_PASS', usernameVariable: 'GHCR_USER')]) {
+                            sh 'echo "$GHCR_PASS" | docker login ghcr.io -u "$GHCR_USER" --password-stdin'
+                            sh "docker build -t ${IMAGE_NAME}:dev-latest ."
+                            sh "docker push ${IMAGE_NAME}:dev-latest"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Deploy (Trigger ArgoCD)') {
+            steps {
+                script {
+                    // Download kubectl inside the Jenkins workspace
+                    sh 'curl -sLO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl" && chmod +x kubectl'
+
+                    // Trigger the rollout restart to pull the new dev-latest image
+                    sh './kubectl rollout restart deployment frontend -n orangy-dev'
+                }
+            }
+        }
+    }
+}
