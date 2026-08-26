@@ -5,6 +5,12 @@ pipeline {
         // Reuses the same GHCR credential already configured for the backend job
         GHCR_CREDENTIALS_ID = 'ghcr-login'
         IMAGE_NAME = 'ghcr.io/vedantkhursange/orangy-frontend'
+        // Cloudinary direct-upload config for the admin media uploader — both
+        // values are PUBLIC (unsigned upload preset), safe to keep here.
+        // Fill in once you've created a free Cloudinary account + preset;
+        // see frontend/.env.local.example for the 2-minute setup steps.
+        CLOUDINARY_CLOUD_NAME = ''
+        CLOUDINARY_UPLOAD_PRESET = ''
     }
 
     stages {
@@ -15,7 +21,12 @@ pipeline {
                     dir('frontend') {
                         withCredentials([usernamePassword(credentialsId: GHCR_CREDENTIALS_ID, passwordVariable: 'GHCR_PASS', usernameVariable: 'GHCR_USER')]) {
                             sh 'echo "$GHCR_PASS" | docker login ghcr.io -u "$GHCR_USER" --password-stdin'
-                            sh "docker build -t ${IMAGE_NAME}:dev-latest ."
+                            sh """
+                                docker build \
+                                  --build-arg NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME} \
+                                  --build-arg NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=${CLOUDINARY_UPLOAD_PRESET} \
+                                  -t ${IMAGE_NAME}:dev-latest .
+                            """
                             sh "docker push ${IMAGE_NAME}:dev-latest"
                         }
                     }

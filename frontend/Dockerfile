@@ -7,6 +7,13 @@ RUN npm ci
 # Copy the source and build the standalone server bundle
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# Cloudinary direct-upload config — PUBLIC values (unsigned preset), baked
+# into the client bundle at build time since NEXT_PUBLIC_* vars can't be
+# injected at container runtime. Pass via --build-arg.
+ARG NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+ARG NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+ENV NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
+ENV NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=${NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
 RUN npm run build
 
 # Runtime Stage — minimal Node runtime with the standalone output

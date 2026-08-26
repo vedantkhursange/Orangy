@@ -2,10 +2,12 @@
 
 import { FormEvent, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ImagePlus, Leaf, Pencil, Plus, Trash2 } from "lucide-react";
+import { Leaf, Pencil, Plus, Trash2 } from "lucide-react";
 import { api, inr } from "@/lib/api";
 import type { MediaAsset, Page, Product, ProductCreateRequest, ProductSummary, Variant, VariantCreateRequest } from "@/lib/types";
 import { useToast } from "@/components/providers/Providers";
+import ImageUploadField from "@/components/admin/ImageUploadField";
+import MediaUploader from "@/components/admin/MediaUploader";
 import { Badge, Button, Card, Dialog, EmptyState, Input, Label, Pagination, Select, Skeleton, Textarea } from "@/components/ui/ui";
 
 /* ─────────────────────── page ─────────────────────── */
@@ -322,10 +324,13 @@ function VariantForm({ productId, variant, onDone }: { productId: string; varian
         <Label>Stock count</Label>
         <Input type="number" required min={0} value={form.stockCount ?? ""} onChange={(e) => setForm((f) => ({ ...f, stockCount: Number(e.target.value) }))} />
       </label>
-      <label className="sm:col-span-2">
-        <Label>Thumbnail image URL</Label>
-        <Input type="url" value={form.thumbnailImageUrl ?? ""} onChange={(e) => setForm((f) => ({ ...f, thumbnailImageUrl: e.target.value }))} placeholder="https://…" />
-      </label>
+      <div className="sm:col-span-2">
+        <ImageUploadField
+          label="Thumbnail image"
+          value={form.thumbnailImageUrl ?? ""}
+          onChange={(url) => setForm((f) => ({ ...f, thumbnailImageUrl: url }))}
+        />
+      </div>
       <div className="flex gap-2 sm:col-span-2">
         <Button type="submit" loading={save.isPending}>{variant ? "Update variant" : "Add variant"}</Button>
         <Button type="button" variant="ghost" onClick={onDone}>Cancel</Button>
@@ -335,9 +340,6 @@ function VariantForm({ productId, variant, onDone }: { productId: string; varian
 }
 
 function MediaManager({ productId }: { productId: string }) {
-  const [url, setUrl] = useState("");
-  const [alt, setAlt] = useState("");
-  const [type, setType] = useState<"IMAGE" | "VIDEO">("IMAGE");
   const qc = useQueryClient();
   const { toast } = useToast();
 
@@ -347,20 +349,17 @@ function MediaManager({ productId }: { productId: string }) {
   });
 
   const add = useMutation({
-    mutationFn: () =>
+    mutationFn: (upload: { url: string; type: "IMAGE" | "VIDEO" }) =>
       api.post<MediaAsset>("/api/admin/media", {
         refType: "PRODUCT",
-        type,
-        url,
+        type: upload.type,
+        url: upload.url,
         refId: productId,
-        altText: alt || undefined,
         sortOrder: (media?.length ?? 0) + 1,
       }),
     onSuccess: () => {
-      setUrl("");
-      setAlt("");
       qc.invalidateQueries({ queryKey: ["media", productId] });
-      toast("Media added to the gallery.", "success");
+      toast("Added to the gallery.", "success");
     },
     onError: (e) => toast(e instanceof Error ? e.message : "Could not add media.", "error"),
   });
@@ -379,7 +378,7 @@ function MediaManager({ productId }: { productId: string }) {
       {isLoading ? (
         <Skeleton className="h-32" />
       ) : (media ?? []).length === 0 ? (
-        <EmptyState title="No gallery media" sub="Paste a hosted image/video URL below — it appears on the product page instantly." />
+        <EmptyState title="No gallery media" sub="Upload a photo or video below — it appears on the product page instantly." />
       ) : (
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
           {(media ?? []).map((m) => (
@@ -402,31 +401,13 @@ function MediaManager({ productId }: { productId: string }) {
         </div>
       )}
 
-      <form
-        onSubmit={(e) => { e.preventDefault(); add.mutate(); }}
-        className="mt-5 grid gap-3 rounded-2xl border border-orange/30 bg-orange/5 p-4"
-      >
-        <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
-          <label>
-            <Label>Hosted media URL</Label>
-            <Input type="url" required value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://res.cloudinary.com/…" />
-          </label>
-          <label>
-            <Label>Type</Label>
-            <Select value={type} onChange={(e) => setType(e.target.value as "IMAGE" | "VIDEO")}>
-              <option value="IMAGE">Image</option>
-              <option value="VIDEO">Video</option>
-            </Select>
-          </label>
-        </div>
-        <label>
-          <Label>Alt text</Label>
-          <Input value={alt} onChange={(e) => setAlt(e.target.value)} placeholder="Basket of fresh oranges" />
-        </label>
-        <Button type="submit" loading={add.isPending} disabled={!url}>
-          <ImagePlus className="h-4 w-4" /> Add to gallery
-        </Button>
-      </form>
+      <div className="mt-5">
+        <MediaUploader
+          onUploaded={(result) =>
+            add.mutate({ url: result.url, type: result.resourceType === "video" ? "VIDEO" : "IMAGE" })
+          }
+        />
+      </div>
     </div>
   );
 }
