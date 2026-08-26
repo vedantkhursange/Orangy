@@ -21,13 +21,17 @@ pipeline {
                     dir('frontend') {
                         withCredentials([usernamePassword(credentialsId: GHCR_CREDENTIALS_ID, passwordVariable: 'GHCR_PASS', usernameVariable: 'GHCR_USER')]) {
                             sh 'echo "$GHCR_PASS" | docker login ghcr.io -u "$GHCR_USER" --password-stdin'
-                            sh """
+                            // Single-quoted: let bash expand these from the environment{}
+                            // block (Jenkins exports it to every sh step) instead of Groovy
+                            // GString interpolation, which only resolves env.FOO inside
+                            // script{} blocks — bare FOO throws MissingPropertyException.
+                            sh '''
                                 docker build \
-                                  --build-arg NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME} \
-                                  --build-arg NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=${CLOUDINARY_UPLOAD_PRESET} \
-                                  -t ${IMAGE_NAME}:dev-latest .
-                            """
-                            sh "docker push ${IMAGE_NAME}:dev-latest"
+                                  --build-arg NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=$CLOUDINARY_CLOUD_NAME \
+                                  --build-arg NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=$CLOUDINARY_UPLOAD_PRESET \
+                                  -t $IMAGE_NAME:dev-latest .
+                            '''
+                            sh 'docker push $IMAGE_NAME:dev-latest'
                         }
                     }
                 }
