@@ -9,8 +9,8 @@ pipeline {
         // values are PUBLIC (unsigned upload preset), safe to keep here.
         // Fill in once you've created a free Cloudinary account + preset;
         // see frontend/.env.local.example for the 2-minute setup steps.
-        CLOUDINARY_CLOUD_NAME = ''
-        CLOUDINARY_UPLOAD_PRESET = ''
+        CLOUDINARY_CLOUD_NAME = 'yxhno37l'
+        CLOUDINARY_UPLOAD_PRESET = 'orangy'
     }
 
     stages {
