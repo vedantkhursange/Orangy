@@ -3,19 +3,23 @@
 import { use, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BadgeCheck, Leaf, MapPin, ShoppingCart } from "lucide-react";
+import { BadgeCheck, Leaf, MapPin, ShoppingCart, Zap } from "lucide-react";
 import { api, inr } from "@/lib/api";
 import type { Cart, MediaAsset, Page as SpringPage, Product, Review } from "@/lib/types";
-import { useAuth, useToast } from "@/components/providers/Providers";
+import { useAuth, useCart, useToast } from "@/components/providers/Providers";
+import MediaLightbox from "@/components/product/MediaLightbox";
 import { Badge, Button, Card, EmptyState, Pagination, QtyStepper, Skeleton, Stars, Textarea } from "@/components/ui/ui";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [variantId, setVariantId] = useState<string | null>(null);
-  const [qty, setQty] = useState(1);
+  const [variantError, setVariantError] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [buyingNow, setBuyingNow] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { data: cart } = useCart();
   const qc = useQueryClient();
   const router = useRouter();
 
@@ -29,10 +33,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     queryFn: () => api.get<MediaAsset[]>(`/api/media/product/${id}`),
   });
 
-  const variant = useMemo(() => {
-    if (!product?.variants?.length) return null;
-    return product.variants.find((v) => v.id === variantId) ?? product.variants[0];
-  }, [product, variantId]);
+  // No variant is pre-selected — the shopper must choose a pack explicitly.
+  const variant = useMemo(() => product?.variants?.find((v) => v.id === variantId) ?? null, [product, variantId]);
 
   const images = useMemo(() => {
     const urls: { url: string; alt: string }[] = [];
@@ -42,14 +44,58 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     return urls.filter((u) => !seen.has(u.url) && seen.add(u.url));
   }, [media, product]);
 
+  // Quantity of the selected variant already sitting in the server cart —
+  // drives the Add-to-Basket → +/- stepper morph (Blinkit/Instamart pattern).
+  const cartQty = useMemo(
+    () => cart?.items.find((i) => i.variantId === variant?.id)?.quantity ?? 0,
+    [cart, variant],
+  );
+
   const addToCart = useMutation({
-    mutationFn: () => api.post<Cart>("/api/cart/items", { variantId: variant!.id, quantity: qty }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["cart"] });
-      toast("Added to your basket.", "success");
-    },
+    mutationFn: (quantity: number) => api.post<Cart>("/api/cart/items", { variantId: variant!.id, quantity }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["cart"] }),
     onError: (e) => toast(e instanceof Error ? e.message : "Could not add to cart.", "error"),
   });
+
+  const updateCartQty = useMutation({
+    mutationFn: (quantity: number) => api.put<Cart>(`/api/cart/items/${variant!.id}`, { quantity }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["cart"] }),
+    onError: (e) => toast(e instanceof Error ? e.message : "Could not update quantity.", "error"),
+  });
+
+  const removeFromCart = useMutation({
+    mutationFn: () => api.del<Cart>(`/api/cart/items/${variant!.id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["cart"] }),
+    onError: (e) => toast(e instanceof Error ? e.message : "Could not remove item.", "error"),
+  });
+
+  const requireVariant = () => {
+    if (variant) {
+      setVariantError(false);
+      return true;
+    }
+    setVariantError(true);
+    return false;
+  };
+
+  const handleAddToBasket = () => {
+    if (!user) { toast("Log in to start your basket.", "info"); router.push("/login"); return; }
+    if (!requireVariant()) return;
+    addToCart.mutate(1);
+    toast("Added to your basket.", "success");
+  };
+
+  const handleBuyNow = async () => {
+    if (!user) { toast("Log in to continue.", "info"); router.push("/login"); return; }
+    if (!requireVariant()) return;
+    setBuyingNow(true);
+    try {
+      if (cartQty === 0) await addToCart.mutateAsync(1);
+      router.push("/checkout"); // skip the cart review page, like Buy Now on Amazon/Flipkart
+    } finally {
+      setBuyingNow(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -73,14 +119,19 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     );
   }
 
-  const outOfStock = (variant?.stockCount ?? 0) <= 0;
+  // Only a genuinely out-of-stock *selected* variant disables buying — no
+  // variant chosen yet must stay clickable so it can trigger validation.
+  const outOfStock = variant ? variant.stockCount <= 0 : false;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">
       <div className="grid gap-10 md:grid-cols-2">
         {/* gallery */}
         <div>
-          <div className="relative aspect-square overflow-hidden rounded-3xl border border-ink/8 bg-sand">
+          <div
+            onClick={() => images.length > 0 && setLightboxOpen(true)}
+            className={`relative aspect-square overflow-hidden rounded-3xl border border-ink/8 bg-sand ${images.length > 0 ? "cursor-zoom-in" : ""}`}
+          >
             {images.length > 0 ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={images[Math.min(activeImage, images.length - 1)].url} alt={images[0].alt} className="h-full w-full object-cover" />
@@ -123,14 +174,19 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           {/* variant selector */}
           <div className="mt-7">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink/55">Choose a pack</p>
-            <div className="flex flex-wrap gap-2.5">
+            <div
+              className={[
+                "flex flex-wrap gap-2.5 rounded-2xl transition",
+                variantError && "-m-2 border-2 border-[#b3362b] p-2",
+              ].filter(Boolean).join(" ")}
+            >
               {product.variants.map((v) => {
                 const active = variant?.id === v.id;
                 const empty = v.stockCount <= 0;
                 return (
                   <button
                     key={v.id}
-                    onClick={() => { setVariantId(v.id); setQty(1); }}
+                    onClick={() => { setVariantId(v.id); setVariantError(false); }}
                     disabled={empty}
                     className={[
                       "rounded-xl border px-4 py-2.5 text-left transition",
@@ -147,30 +203,57 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 );
               })}
             </div>
+            {variantError && (
+              <p className="mt-2 text-sm font-medium text-[#b3362b]">Please select a pack to continue.</p>
+            )}
           </div>
 
           {/* buy row */}
-          <div className="mt-7 flex flex-wrap items-center gap-4">
-            <QtyStepper value={qty} onChange={setQty} max={Math.max(1, variant?.stockCount ?? 1)} />
-            <Button
-              size="lg"
-              disabled={!variant || outOfStock}
-              loading={addToCart.isPending}
-              onClick={() => {
-                if (!user) { toast("Log in to start your basket.", "info"); router.push("/login"); return; }
-                addToCart.mutate();
-              }}
-            >
-              <ShoppingCart className="h-4 w-4" /> {outOfStock ? "Out of stock" : "Add to Basket"}
+          <div className="mt-7 flex flex-wrap items-center gap-3">
+            {cartQty > 0 && variant && !outOfStock ? (
+              <div className="flex items-center gap-2 rounded-full border border-orange/40 bg-orange/8 px-2 py-1.5">
+                <QtyStepper
+                  value={cartQty}
+                  max={variant.stockCount}
+                  onChange={(next) => {
+                    if (next <= 0) removeFromCart.mutate();
+                    else updateCartQty.mutate(next);
+                  }}
+                />
+              </div>
+            ) : (
+              <Button
+                size="lg"
+                variant="outline"
+                disabled={outOfStock}
+                loading={addToCart.isPending}
+                onClick={handleAddToBasket}
+              >
+                <ShoppingCart className="h-4 w-4" /> {outOfStock ? "Out of stock" : "Add to Basket"}
+              </Button>
+            )}
+
+            <Button size="lg" disabled={outOfStock} loading={buyingNow} onClick={handleBuyNow}>
+              <Zap className="h-4 w-4" /> Buy Now
             </Button>
+
             {variant && !outOfStock && (
               <span className="text-sm text-ink/55">
-                Total <span className="display font-bold text-ink">{inr(variant.price * qty)}</span>
+                <span className="display font-bold text-ink">{inr(variant.price)}</span> / {variant.label}
               </span>
             )}
           </div>
         </div>
       </div>
+
+      {lightboxOpen && images.length > 0 && (
+        <MediaLightbox
+          images={images}
+          index={Math.min(activeImage, images.length - 1)}
+          onIndexChange={setActiveImage}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
 
       <ReviewsSection productId={id} />
     </div>
