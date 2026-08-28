@@ -40,6 +40,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/media/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reviews/product/**").permitAll()
                         .requestMatchers("/api/health").permitAll()
+                        // Kubernetes probes are unauthenticated. Only the
+                        // liveness/readiness groups are exposed (see
+                        // management.endpoints in application.yml), and
+                        // show-details is never, so this leaks nothing.
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
 
                         // Swagger/OpenAPI
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html",

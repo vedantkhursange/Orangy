@@ -22,8 +22,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME:khursangevedant@gmail.com}
-    password: ${MAIL_PASSWORD:gddu hlzk lkhh yten}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
@@ -34,7 +34,7 @@ spring:
 # JWT Configuration
 app:
   jwt:
-    secret: ${JWT_SECRET:orangy-dev-secret-key-that-is-at-least-256-bits-long-for-hs256}
+    secret: ${JWT_SECRET:}
     access-token-expiry-ms: ${JWT_EXPIRATION_MS:900000}       # 15 minutes
     refresh-token-expiry-ms: ${JWT_REFRESH_EXPIRY_MS:604800000} # 7 days
 
@@ -49,9 +49,9 @@ app:
 
   # Admin Seeder
   admin:
-    email: ${ADMIN_EMAIL:admin@orangy.com}
-    password: ${ADMIN_DEFAULT_PASSWORD:admin123}
-    notification-email: ${ADMIN_NOTIFICATION_EMAIL:khursangevedant@gmail.com}
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_DEFAULT_PASSWORD:}
+    notification-email: ${ADMIN_NOTIFICATION_EMAIL:}
 
   # OTP
   otp:
@@ -72,3 +72,17 @@ springdoc:
     path: /swagger-ui.html
     operations-sorter: method
     tags-sorter: alpha
+
+# Actuator — exposed purely for Kubernetes probes.
+# Only /actuator/health is reachable, and it never shows component detail, so
+# it cannot be used to fingerprint the stack or leak connection strings.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never

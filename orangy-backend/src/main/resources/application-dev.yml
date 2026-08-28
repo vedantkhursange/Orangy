@@ -36,3 +36,11 @@ logging:
   level:
     com.orangy: DEBUG
     org.springframework.security: DEBUG
+
+# Local-development fallbacks only. The prod profile has no defaults for these:
+# every environment must supply them explicitly (in Kubernetes they come from
+# the `orangy-secrets` Secret). This value is not a secret — it exists so
+# `mvn spring-boot:run` works with no environment set up.
+app:
+  jwt:
+    secret: ${JWT_SECRET:local-development-only-jwt-signing-key-not-used-anywhere-else-256bits}
