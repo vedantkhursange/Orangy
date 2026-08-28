@@ -187,7 +187,7 @@ export default function ScrollFilm() {
       <section id="home" className="relative">
         <div className="relative h-[92vh] w-full overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/hero-dawn.webp" alt="Dawn over the Orangy family orchards" className="h-full w-full object-cover" />
+          <img src="/images/hero-dawn.webp" alt="Dawn over the Orange Express family orchards" className="h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
           <HeroOverlay staticMode />
         </div>

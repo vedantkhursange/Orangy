@@ -32,7 +32,7 @@ export default function SignupPage() {
 
   return (
     <div className="mx-auto flex max-w-md flex-col px-4 py-16 md:py-24">
-      <h1 className="display text-3xl font-bold text-ink">Join Orangy</h1>
+      <h1 className="display text-3xl font-bold text-ink">Join Orange Express</h1>
       <p className="mt-2 text-sm text-ink/60">Fresh oranges from our family groves, delivered to your door.</p>
 
       <Card className="mt-8 p-6">

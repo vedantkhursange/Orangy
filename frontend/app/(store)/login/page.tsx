@@ -53,7 +53,7 @@ export default function LoginPage() {
       </Card>
 
       <p className="mt-6 text-center text-sm text-ink/60">
-        New to Orangy?{" "}
+        New to Orange Express?{" "}
         <Link href="/signup" className="font-semibold text-orange-deep hover:underline">
           Create an account
         </Link>

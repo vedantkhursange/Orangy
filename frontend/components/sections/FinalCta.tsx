@@ -9,7 +9,7 @@ export default function FinalCta() {
     <section id="contact" className="relative flex min-h-[88vh] items-center overflow-hidden">
       <Image
         src="/images/glass.webp"
-        alt="A glass of fresh Orangy juice in golden light"
+        alt="A glass of fresh Orange Express juice in golden light"
         fill
         sizes="100vw"
         className="object-cover"

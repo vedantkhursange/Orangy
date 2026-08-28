@@ -14,7 +14,7 @@ export default function OurStory() {
           >
             <Image
               src="/images/orchard-mist.webp"
-              alt="Morning mist over the Orangy family orchard"
+              alt="Morning mist over the Orange Express family orchard"
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover"

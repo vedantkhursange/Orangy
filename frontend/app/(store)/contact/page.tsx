@@ -12,7 +12,7 @@ export default function ContactPage() {
       <p className="text-xs font-semibold uppercase tracking-wider text-orange-deep">Get in touch</p>
       <h1 className="display mt-2 text-3xl font-bold text-ink md:text-4xl">Visit the grove</h1>
       <p className="mt-3 max-w-xl text-ink/60">
-        Khursange Farms — where every Orangy order starts. Find us on the map, or reach out directly.
+        Khursange Farms — where every Orange Express order starts. Find us on the map, or reach out directly.
       </p>
 
       <div className="mt-10 grid gap-8 lg:grid-cols-[2fr_3fr]">

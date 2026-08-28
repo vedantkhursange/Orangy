@@ -91,7 +91,7 @@ export async function openRazorpayCheckout(
     key: order.razorpayKeyId,
     amount: order.amountInPaise,
     currency: "INR",
-    name: "Orangy",
+    name: "Orange Express",
     description: `Order #${order.id.slice(0, 8)}`,
     order_id: order.razorpayOrderId,
     prefill: opts.prefill,

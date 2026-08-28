@@ -5,7 +5,7 @@
  */
 
 export const brand = {
-  name: "ORANGY",
+  name: "ORANGE EXPRESS",
   tagline: "Born under the sun. Made for you.",
 };
 
@@ -51,14 +51,14 @@ export const filmCaptions = {
   },
   world: {
     title: "From our groves, to every table.",
-    sub: "This is Orangy.",
+    sub: "This is Orange Express.",
   },
 };
 
 export const manifesto = {
   kicker: "Why We Grow",
   lines: ["We are farmers.", "Our fathers", "were farmers.", "The trees outlive", "every promise — except ours."],
-  body: "Orangy is a family of orange growers selling our own harvest under our own name. No middlemen. No cold storage measured in months. Just the grove, the harvest, and you.",
+  body: "Orange Express is a family of orange growers selling our own harvest under our own name. No middlemen. No cold storage measured in months. Just the grove, the harvest, and you.",
 };
 
 export type Product = {
@@ -117,7 +117,7 @@ export const products: Product[] = [
 ];
 
 export const whyOrangy = {
-  kicker: "Why Orangy",
+  kicker: "Why Orange Express",
   title: "Grown with patience. Delivered with care.",
   points: [
     {
@@ -133,7 +133,7 @@ export const whyOrangy = {
     {
       n: "03",
       title: "Premium Quality",
-      body: "Only the top grade of each harvest carries the Orangy name.",
+      body: "Only the top grade of each harvest carries the Orange Express name.",
     },
     {
       n: "04",
@@ -153,7 +153,7 @@ export const story = {
   title: "Own the trees. Honor the fruit.",
   paragraphs: [
     "We are a family of growers. Some of our trees were planted by our grandfathers, and they still give fruit every season. We prune, we wait, we watch the sky, and we pick each orange by hand when it is ready — not when a schedule says so.",
-    "This website is our stand: farmers selling their own harvest under their own name. When you buy Orangy, the grove gets paid — the people who actually grew it.",
+    "This website is our stand: farmers selling their own harvest under their own name. When you buy Orange Express, the grove gets paid — the people who actually grew it.",
   ],
   stats: [
     { value: "40+", label: "years, oldest bearing trees" },
@@ -183,7 +183,7 @@ export const finalCta = {
   title: "Taste the Sunshine.",
   sub: "Fresh oranges and cold-pressed juice, delivered from our orchard to your door.",
   primary: "Shop Fresh",
-  secondary: "Explore Orangy",
+  secondary: "Explore Orange Express",
 };
 
 export const footer = {
@@ -202,5 +202,5 @@ export const footer = {
       links: ["Instagram", "YouTube", "Pinterest"],
     },
   ],
-  fineprint: "© 2026 Orangy. Grown under the sun.",
+  fineprint: "© 2026 Orange Express. Grown under the sun.",
 };

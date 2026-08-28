@@ -22,7 +22,7 @@ export default function WhyOrangy() {
             >
               <Image
                 src="/images/cut.webp"
-                alt="Freshly cut Orangy orange"
+                alt="Freshly cut Orange Express orange"
                 fill
                 sizes="(max-width: 768px) 100vw, 40vw"
                 className="object-cover"

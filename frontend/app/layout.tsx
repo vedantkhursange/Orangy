@@ -17,7 +17,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Orangy — Born Under the Sun",
+  title: "Orange Express — Born Under the Sun",
   description:
     "Farmer-owned oranges, from our family groves to your table. Fresh fruit and cold-pressed juice, picked by the hands that raised them.",
 };
