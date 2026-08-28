@@ -46,14 +46,14 @@ export default function Manifesto() {
         <p className="mb-8 text-xs font-semibold uppercase tracking-[0.35em] text-orange-glow">
           {manifesto.kicker}
         </p>
-        <h2 className="display max-w-4xl text-4xl font-bold leading-[1.12] text-cream-soft md:text-6xl lg:text-7xl">
+        <h2 className="display max-w-4xl text-4xl font-bold leading-[1.12] text-cream-fixed-soft md:text-6xl lg:text-7xl">
           {manifesto.lines.map((l, i) => (
             <span key={i} data-line className="block">
               {l}
             </span>
           ))}
         </h2>
-        <p className="mt-10 max-w-xl text-base leading-relaxed text-cream/60 md:text-lg" data-line>
+        <p className="mt-10 max-w-xl text-base leading-relaxed text-cream-fixed/60 md:text-lg" data-line>
           {manifesto.body}
         </p>
       </div>

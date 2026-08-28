@@ -19,6 +19,11 @@
   --ink: #2b2018;
   --dusk: #1c1208;
   --dusk-2: #291a0c;
+  /* Always-light text for the always-dark "stage" sections (dusk/dusk-2
+     backgrounds) — unlike --cream, this never inverts, since those
+     sections stay dark in both themes. */
+  --cream-fixed: #fff8ef;
+  --cream-fixed-soft: #fffcf7;
 }
 
 /* Dark mode flips the semantic tokens; orange accents stay identical. */
@@ -50,6 +55,8 @@
   --color-ink: var(--ink);
   --color-dusk: var(--dusk);
   --color-dusk-2: var(--dusk-2);
+  --color-cream-fixed: var(--cream-fixed);
+  --color-cream-fixed-soft: var(--cream-fixed-soft);
   --font-display: var(--font-outfit);
   --font-sans: var(--font-inter);
 }

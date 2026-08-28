@@ -8,6 +8,8 @@ import { api, inr } from "@/lib/api";
 import type { Cart, MediaAsset, Page as SpringPage, Product, Review } from "@/lib/types";
 import { useAuth, useCart, useToast } from "@/components/providers/Providers";
 import MediaLightbox from "@/components/product/MediaLightbox";
+import OffersPanel from "@/components/product/OffersPanel";
+import SimilarProducts from "@/components/product/SimilarProducts";
 import { Badge, Button, Card, EmptyState, Pagination, QtyStepper, Skeleton, Stars, Textarea } from "@/components/ui/ui";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -243,6 +245,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </span>
             )}
           </div>
+
+          <OffersPanel />
         </div>
       </div>
 
@@ -254,6 +258,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           onClose={() => setLightboxOpen(false)}
         />
       )}
+
+      {product.category && <SimilarProducts category={product.category} excludeId={id} />}
 
       <ReviewsSection productId={id} />
     </div>

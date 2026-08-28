@@ -18,10 +18,10 @@ export default function FinalCta() {
       <div className="absolute inset-0 bg-gradient-to-r from-[#1c1208]/80 via-[#1c1208]/40 to-transparent" />
 
       <Reveal className="relative mx-auto w-full max-w-7xl px-6 py-28 md:px-10">
-        <h2 data-reveal className="display max-w-xl text-5xl font-bold leading-[1.05] text-cream-soft md:text-7xl">
+        <h2 data-reveal className="display max-w-xl text-5xl font-bold leading-[1.05] text-cream-fixed-soft md:text-7xl">
           {finalCta.title}
         </h2>
-        <p data-reveal className="mt-6 max-w-md text-base leading-relaxed text-cream/80 md:text-lg">
+        <p data-reveal className="mt-6 max-w-md text-base leading-relaxed text-cream-fixed/80 md:text-lg">
           {finalCta.sub}
         </p>
         <div data-reveal className="mt-10 flex flex-wrap gap-4">
@@ -33,7 +33,7 @@ export default function FinalCta() {
           </Link>
           <a
             href="#home"
-            className="rounded-full border border-cream/40 px-8 py-4 text-sm font-semibold text-cream-soft backdrop-blur-sm transition hover:border-cream/80 hover:bg-cream/10"
+            className="rounded-full border border-cream-fixed/40 px-8 py-4 text-sm font-semibold text-cream-fixed-soft backdrop-blur-sm transition hover:border-cream-fixed/80 hover:bg-cream-fixed/10"
           >
             {finalCta.secondary}
           </a>

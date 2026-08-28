@@ -11,7 +11,7 @@ export default function Gallery() {
           <p data-reveal className="text-xs font-semibold uppercase tracking-[0.35em] text-orange-glow">
             The Orchard, Up Close
           </p>
-          <h2 data-reveal className="display mt-4 max-w-2xl text-4xl font-bold leading-tight text-cream-soft md:text-5xl">
+          <h2 data-reveal className="display mt-4 max-w-2xl text-4xl font-bold leading-tight text-cream-fixed-soft md:text-5xl">
             A day in golden light.
           </h2>
         </Reveal>
