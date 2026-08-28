@@ -1,6 +1,14 @@
 pipeline {
     agent any
 
+    parameters {
+        choice(
+            name: 'ENVIRONMENT',
+            choices: ['dev', 'prod'],
+            description: 'Target environment to build & deploy. prod requires manual confirmation below.'
+        )
+    }
+
     environment {
         // Reuses the same GHCR credential already configured for the backend job
         GHCR_CREDENTIALS_ID = 'ghcr-login'
@@ -11,9 +19,37 @@ pipeline {
         // see frontend/.env.local.example for the 2-minute setup steps.
         CLOUDINARY_CLOUD_NAME = 'yxhno37l'
         CLOUDINARY_UPLOAD_PRESET = 'orangy'
+        IMAGE_TAG = "${params.ENVIRONMENT}-latest"
+        NAMESPACE = "orangy-${params.ENVIRONMENT}"
+        K8S_MANIFESTS_REPO = 'https://github.com/vedantkhursange/orangy-k8s-manifests.git'
     }
 
     stages {
+        stage('Production Safety Gate') {
+            when { expression { params.ENVIRONMENT == 'prod' } }
+            options { timeout(time: 15, unit: 'MINUTES') }
+            steps {
+                script {
+                    // Requires typing an exact confirmation string, not just a button
+                    // click, so a mis-selected dropdown can't reach prod by accident.
+                    // Add `submitter: 'your-jenkins-username-or-group'` here once you
+                    // know your Jenkins identity, to restrict who can approve this.
+                    def confirmation = input(
+                        id: 'prodConfirmFrontend',
+                        message: "Deploy FRONTEND to PRODUCTION?\nImage: ${IMAGE_NAME}:${IMAGE_TAG}\nNamespace: ${NAMESPACE}",
+                        ok: 'Confirm & Deploy',
+                        parameters: [
+                            string(name: 'CONFIRMATION', defaultValue: '', trim: true,
+                                   description: 'Type DEPLOY-PROD-FRONTEND to confirm')
+                        ]
+                    )
+                    if (confirmation != 'DEPLOY-PROD-FRONTEND') {
+                        error('Production deploy aborted — confirmation text did not match.')
+                    }
+                }
+            }
+        }
+
         stage('Build & Push Docker Image') {
             steps {
                 script {
@@ -29,23 +65,37 @@ pipeline {
                                 docker build \
                                   --build-arg NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=$CLOUDINARY_CLOUD_NAME \
                                   --build-arg NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=$CLOUDINARY_UPLOAD_PRESET \
-                                  -t $IMAGE_NAME:dev-latest .
+                                  -t $IMAGE_NAME:$IMAGE_TAG .
                             '''
-                            sh 'docker push $IMAGE_NAME:dev-latest'
+                            sh 'docker push $IMAGE_NAME:$IMAGE_TAG'
                         }
                     }
                 }
             }
         }
 
-        stage('Deploy (Trigger ArgoCD)') {
+        stage('Fetch K8s Manifests') {
+            steps {
+                sh 'rm -rf k8s-manifests'
+                sh "git clone --depth 1 ${K8S_MANIFESTS_REPO} k8s-manifests"
+            }
+        }
+
+        stage('Deploy') {
             steps {
                 script {
                     // Download kubectl inside the Jenkins workspace
                     sh 'curl -sLO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl" && chmod +x kubectl'
 
-                    // Trigger the rollout restart to pull the new dev-latest image
-                    sh './kubectl rollout restart deployment frontend -n orangy-dev'
+                    // Idempotent — creates the namespace on a cold cluster, no-ops if it already exists
+                    sh "./kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | ./kubectl apply -f -"
+
+                    // Applies the full overlay (creates resources on first run, updates on subsequent ones)
+                    sh "./kubectl apply -k k8s-manifests/overlays/${params.ENVIRONMENT}"
+
+                    // The image tag string doesn't change between builds, so force a re-pull
+                    sh "./kubectl rollout restart deployment frontend -n ${NAMESPACE}"
+                    sh "./kubectl rollout status deployment frontend -n ${NAMESPACE} --timeout=180s"
                 }
             }
         }
