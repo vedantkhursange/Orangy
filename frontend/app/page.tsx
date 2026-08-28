@@ -1,5 +1,5 @@
 import Navbar from "@/components/navigation/Navbar";
-import ScrollFilm from "@/components/film/ScrollFilm";
+import ExpressFilm from "@/components/film/ExpressFilm";
 import Manifesto from "@/components/sections/Manifesto";
 import Products from "@/components/sections/Products";
 import WhyOrangy from "@/components/sections/WhyOrangy";
@@ -12,7 +12,7 @@ export default function Home() {
   return (
     <main>
       <Navbar />
-      <ScrollFilm />
+      <ExpressFilm />
       <Manifesto />
       <Products />
       <WhyOrangy />
