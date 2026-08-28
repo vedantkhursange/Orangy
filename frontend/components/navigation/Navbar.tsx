@@ -22,7 +22,7 @@ const links = [
   { label: "Products", href: "/products" },
   { label: "Our Story", href: "/#story" },
   { label: "Gallery", href: "/#gallery" },
-  { label: "Contact", href: "/#contact" },
+  { label: "Contact", href: "/contact" },
 ];
 
 /**
