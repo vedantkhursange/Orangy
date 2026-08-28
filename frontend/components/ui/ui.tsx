@@ -107,7 +107,7 @@ export function Badge({
 
 export function statusTone(status: string): "neutral" | "success" | "warning" | "danger" | "orange" {
   const s = status?.toUpperCase() ?? "";
-  if (["PAID", "DELIVERED", "APPROVED", "COMPLETED"].includes(s)) return "success";
+  if (["PAID", "DELIVERED", "APPROVED", "COMPLETED", "CONFIRMED"].includes(s)) return "success";
   if (["PENDING", "CREATED", "PROCESSING", "PACKED"].includes(s)) return "warning";
   if (["CANCELLED", "FAILED", "REJECTED"].includes(s)) return "danger";
   if (["SHIPPED", "OUT_FOR_DELIVERY"].includes(s)) return "orange";

@@ -23,6 +23,8 @@ public class OrderResponse {
     private String orderStatus;
     private String paymentStatus;
     private String razorpayOrderId;
+    private String razorpayKeyId;
+    private Long amountInPaise;
     private AddressResponse deliveryAddress;
     private List<OrderItemResponse> items;
     private LocalDateTime createdAt;

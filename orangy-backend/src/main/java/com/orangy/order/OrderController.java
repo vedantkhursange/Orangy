@@ -4,6 +4,7 @@ import com.orangy.auth.AuthenticatedUser;
 import com.orangy.common.dto.ApiResponse;
 import com.orangy.order.dto.OrderCreateRequest;
 import com.orangy.order.dto.OrderResponse;
+import com.orangy.order.dto.PaymentFailureRequest;
 import com.orangy.order.dto.PaymentVerificationRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,6 +41,15 @@ public class OrderController {
             @AuthenticationPrincipal AuthenticatedUser principal,
             @Valid @RequestBody PaymentVerificationRequest request) {
         OrderResponse response = orderService.verifyPayment(principal.getUserId(), request);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/payment-failed")
+    @Operation(summary = "Record a failed/abandoned Razorpay payment attempt")
+    public ResponseEntity<ApiResponse<OrderResponse>> markPaymentFailed(
+            @AuthenticationPrincipal AuthenticatedUser principal,
+            @Valid @RequestBody PaymentFailureRequest request) {
+        OrderResponse response = orderService.markPaymentFailed(principal.getUserId(), request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

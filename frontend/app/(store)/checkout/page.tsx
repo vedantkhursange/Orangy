@@ -3,17 +3,20 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, MapPin, Plus } from "lucide-react";
+import { MapPin, Plus, ShieldCheck } from "lucide-react";
 import { api, inr } from "@/lib/api";
+import { openRazorpayCheckout } from "@/lib/razorpay";
 import type { Address, AddressRequest, Order } from "@/lib/types";
 import { useAuth, useCart, useToast } from "@/components/providers/Providers";
 import AddressForm from "@/components/account/AddressForm";
+import OrderSuccessAnimation from "@/components/checkout/OrderSuccessAnimation";
 import { Badge, Button, Card, Dialog, EmptyState, Skeleton } from "@/components/ui/ui";
 
 /**
- * Checkout: pick/add a delivery address → place the order → pay.
- * The backend creates a Razorpay order id (mock fallback in dev): mock ids get
- * a "simulate payment" flow that calls verify-payment with dummy credentials.
+ * Checkout: pick/add a delivery address → place the order → pay via Razorpay
+ * (UPI, cards, wallets, QR — all handled by the Razorpay Checkout popup).
+ * Once the payment signature is verified server-side we play a short
+ * "order placed" animation, then hand off to the full order details page.
  */
 export default function CheckoutPage() {
   const { user, loading } = useAuth();
@@ -21,6 +24,8 @@ export default function CheckoutPage() {
   const [selected, setSelected] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [placedOrder, setPlacedOrder] = useState<Order | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [celebrate, setCelebrate] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
   const router = useRouter();
@@ -42,6 +47,42 @@ export default function CheckoutPage() {
     onError: (e) => toast(e instanceof Error ? e.message : "Could not save address.", "error"),
   });
 
+  const verifyPayment = useMutation({
+    mutationFn: (payload: { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string }) =>
+      api.post<Order>("/api/orders/verify-payment", payload),
+    onSuccess: (order) => {
+      setPlacedOrder(order);
+      setPaymentError(null);
+      qc.invalidateQueries({ queryKey: ["orders"] });
+      setCelebrate(true);
+    },
+    onError: (e) => setPaymentError(e instanceof Error ? e.message : "Payment verification failed."),
+  });
+
+  const reportFailure = useMutation({
+    mutationFn: (payload: { razorpayOrderId: string; reason?: string }) =>
+      api.post<Order>("/api/orders/payment-failed", payload),
+  });
+
+  const launchPayment = (order: Order) => {
+    setPaymentError(null);
+    const selectedAddress = (addresses ?? []).find((a) => a.id === selected);
+    openRazorpayCheckout(order, {
+      prefill: { name: user?.name, email: user?.email, contact: selectedAddress?.phone ?? user?.phone },
+      onSuccess: (response) =>
+        verifyPayment.mutate({
+          razorpayOrderId: response.razorpay_order_id,
+          razorpayPaymentId: response.razorpay_payment_id,
+          razorpaySignature: response.razorpay_signature,
+        }),
+      onFailure: (reason) => {
+        setPaymentError(reason);
+        if (order.razorpayOrderId) reportFailure.mutate({ razorpayOrderId: order.razorpayOrderId, reason });
+      },
+      onDismiss: () => setPaymentError("Payment window closed before completing. You can try again."),
+    });
+  };
+
   const placeOrder = useMutation({
     mutationFn: () => {
       const address = (addresses ?? []).find((a) => a.id === selected)!;
@@ -52,23 +93,9 @@ export default function CheckoutPage() {
       qc.invalidateQueries({ queryKey: ["cart"] });
       qc.invalidateQueries({ queryKey: ["orders"] });
       setPlacedOrder(order);
+      launchPayment(order);
     },
     onError: (e) => toast(e instanceof Error ? e.message : "Could not place the order.", "error"),
-  });
-
-  const verifyPayment = useMutation({
-    mutationFn: () =>
-      api.post<Order>("/api/orders/verify-payment", {
-        razorpayOrderId: placedOrder!.razorpayOrderId,
-        razorpayPaymentId: `pay_mock_${Date.now()}`,
-        razorpaySignature: "mock_signature",
-      }),
-    onSuccess: (order) => {
-      setPlacedOrder(order);
-      qc.invalidateQueries({ queryKey: ["orders"] });
-      toast("Payment confirmed — the grove is packing your order!", "success");
-    },
-    onError: (e) => toast(e instanceof Error ? e.message : "Payment verification failed.", "error"),
   });
 
   if (!loading && !user) {
@@ -85,19 +112,23 @@ export default function CheckoutPage() {
     );
   }
 
-  /* ── success screen ── */
+  if (celebrate && placedOrder) {
+    return (
+      <OrderSuccessAnimation
+        orderId={placedOrder.id}
+        totalAmount={placedOrder.totalAmount}
+        onDone={() => router.push(`/orders/${placedOrder.id}`)}
+      />
+    );
+  }
+
+  /* ── awaiting / retrying payment ── */
   if (placedOrder) {
-    const paid = placedOrder.paymentStatus?.toUpperCase() === "PAID";
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <CheckCircle2 className={`mx-auto h-16 w-16 ${paid ? "text-leaf" : "text-orange"}`} />
-        <h1 className="display mt-4 text-3xl font-bold text-ink">
-          {paid ? "Order confirmed!" : "Order placed — one last step"}
-        </h1>
+        <h1 className="display mt-4 text-3xl font-bold text-ink">Complete your payment</h1>
         <p className="mx-auto mt-2 max-w-md text-ink/60">
-          {paid
-            ? "Payment received. We're picking your oranges — you'll find live status in My Orders."
-            : "Your order is reserved. Complete the payment to send it to the packing shed."}
+          Your order is reserved. Pay securely with UPI, card, wallet or QR to send it to the packing shed.
         </p>
 
         <Card className="mx-auto mt-8 max-w-md p-5 text-left">
@@ -105,20 +136,27 @@ export default function CheckoutPage() {
           <div className="mt-2 flex justify-between text-sm"><span className="text-ink/60">Total</span><span className="display font-bold text-ink">{inr(placedOrder.totalAmount)}</span></div>
           <div className="mt-2 flex justify-between text-sm">
             <span className="text-ink/60">Payment</span>
-            <Badge tone={paid ? "success" : "warning"}>{placedOrder.paymentStatus}</Badge>
+            <Badge tone="warning">{placedOrder.paymentStatus}</Badge>
           </div>
         </Card>
 
-        <div className="mt-8 flex justify-center gap-3">
-          {!paid && (
-            <Button size="lg" loading={verifyPayment.isPending} onClick={() => verifyPayment.mutate()}>
-              Pay {inr(placedOrder.totalAmount)}
-            </Button>
-          )}
+        {paymentError && (
+          <p className="mx-auto mt-4 max-w-md rounded-xl bg-[#b3362b]/10 px-4 py-2.5 text-sm text-[#b3362b]">
+            {paymentError}
+          </p>
+        )}
+
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <Button size="lg" loading={verifyPayment.isPending} onClick={() => launchPayment(placedOrder)}>
+            Pay {inr(placedOrder.totalAmount)}
+          </Button>
           <Button variant="outline" size="lg" onClick={() => router.push(`/orders/${placedOrder.id}`)}>
             View order
           </Button>
         </div>
+        <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-ink/40">
+          <ShieldCheck className="h-3.5 w-3.5" /> Payments are handled securely by Razorpay.
+        </p>
       </div>
     );
   }
@@ -205,6 +243,9 @@ export default function CheckoutPage() {
             Place Order
           </Button>
           {!selected && <p className="mt-2 text-center text-xs text-ink/45">Select a delivery address first.</p>}
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink/40">
+            <ShieldCheck className="h-3.5 w-3.5" /> UPI, cards &amp; wallets via Razorpay
+          </p>
         </Card>
       </div>
 

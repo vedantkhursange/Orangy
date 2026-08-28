@@ -1,21 +1,30 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MapPin } from "lucide-react";
+import { MapPin, ShieldCheck } from "lucide-react";
 import { api, inr } from "@/lib/api";
+import { openRazorpayCheckout } from "@/lib/razorpay";
 import type { Order } from "@/lib/types";
-import { useToast } from "@/components/providers/Providers";
+import { useAuth, useToast } from "@/components/providers/Providers";
 import { Badge, Button, Card, EmptyState, Skeleton, statusTone } from "@/components/ui/ui";
 
-const ORDER_FLOW = ["CREATED", "PAID", "PROCESSING", "SHIPPED", "DELIVERED"];
+const ORDER_FLOW: { status: string; label: string }[] = [
+  { status: "PENDING", label: "Placed" },
+  { status: "CONFIRMED", label: "Confirmed" },
+  { status: "PROCESSING", label: "Processing" },
+  { status: "SHIPPED", label: "Shipped" },
+  { status: "DELIVERED", label: "Delivered" },
+];
 
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const { data: order, isLoading } = useQuery({
     queryKey: ["order", id],
@@ -23,19 +32,41 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   });
 
   const verifyPayment = useMutation({
-    mutationFn: () =>
-      api.post<Order>("/api/orders/verify-payment", {
-        razorpayOrderId: order!.razorpayOrderId,
-        razorpayPaymentId: `pay_mock_${Date.now()}`,
-        razorpaySignature: "mock_signature",
-      }),
+    mutationFn: (payload: { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string }) =>
+      api.post<Order>("/api/orders/verify-payment", payload),
     onSuccess: () => {
+      setPaymentError(null);
       qc.invalidateQueries({ queryKey: ["order", id] });
       qc.invalidateQueries({ queryKey: ["orders"] });
       toast("Payment confirmed!", "success");
     },
-    onError: (e) => toast(e instanceof Error ? e.message : "Payment failed.", "error"),
+    onError: (e) => setPaymentError(e instanceof Error ? e.message : "Payment failed."),
   });
+
+  const reportFailure = useMutation({
+    mutationFn: (payload: { razorpayOrderId: string; reason?: string }) =>
+      api.post<Order>("/api/orders/payment-failed", payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["order", id] }),
+  });
+
+  const retryPayment = () => {
+    if (!order) return;
+    setPaymentError(null);
+    openRazorpayCheckout(order, {
+      prefill: { name: user?.name, email: user?.email, contact: order.deliveryAddress?.phone ?? user?.phone },
+      onSuccess: (response) =>
+        verifyPayment.mutate({
+          razorpayOrderId: response.razorpay_order_id,
+          razorpayPaymentId: response.razorpay_payment_id,
+          razorpaySignature: response.razorpay_signature,
+        }),
+      onFailure: (reason) => {
+        setPaymentError(reason);
+        if (order.razorpayOrderId) reportFailure.mutate({ razorpayOrderId: order.razorpayOrderId, reason });
+      },
+      onDismiss: () => setPaymentError("Payment window closed before completing. You can try again."),
+    });
+  };
 
   if (isLoading) {
     return (
@@ -53,7 +84,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     );
   }
 
-  const statusIndex = ORDER_FLOW.indexOf(order.orderStatus?.toUpperCase());
+  const statusIndex = ORDER_FLOW.findIndex((s) => s.status === order.orderStatus?.toUpperCase());
   const cancelled = order.orderStatus?.toUpperCase() === "CANCELLED";
   const unpaid = order.paymentStatus?.toUpperCase() !== "PAID" && !cancelled;
 
@@ -63,6 +94,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         <div>
           <p className="font-mono text-xs text-ink/45">#{order.id}</p>
           <h1 className="display mt-1 text-2xl font-bold text-ink md:text-3xl">Order details</h1>
+          <p className="mt-1 text-xs text-ink/45">
+            Placed on {new Date(order.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+          </p>
         </div>
         <div className="flex gap-2">
           <Badge tone={statusTone(order.orderStatus)}>{order.orderStatus}</Badge>
@@ -77,7 +111,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             {ORDER_FLOW.map((step, i) => {
               const done = i <= statusIndex;
               return (
-                <li key={step} className="flex flex-1 items-center last:flex-none">
+                <li key={step.status} className="flex flex-1 items-center last:flex-none">
                   <div className="flex flex-col items-center">
                     <span
                       className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold ${
@@ -87,7 +121,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                       {i + 1}
                     </span>
                     <span className={`mt-1.5 text-[10px] font-semibold uppercase tracking-wide ${done ? "text-orange-deep" : "text-ink/40"}`}>
-                      {step}
+                      {step.label}
                     </span>
                   </div>
                   {i < ORDER_FLOW.length - 1 && (
@@ -103,7 +137,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       <div className="mt-6 grid gap-6 md:grid-cols-[3fr_2fr]">
         {/* items */}
         <Card className="p-5">
-          <h2 className="display text-lg font-bold text-ink">Items</h2>
+          <h2 className="display text-lg font-bold text-ink">Items ({order.items.length})</h2>
           <ul className="mt-3 divide-y divide-ink/8">
             {order.items.map((item, i) => (
               <li key={i} className="flex items-center justify-between gap-3 py-3">
@@ -118,7 +152,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           <dl className="mt-3 space-y-1.5 border-t border-ink/10 pt-3 text-sm">
             <div className="flex justify-between text-ink/65"><dt>Subtotal</dt><dd>{inr(order.subtotal)}</dd></div>
             <div className="flex justify-between text-ink/65"><dt>Tax</dt><dd>{inr(order.tax)}</dd></div>
-            <div className="flex justify-between text-ink/65"><dt>Delivery</dt><dd>{inr(order.deliveryFee)}</dd></div>
+            <div className="flex justify-between text-ink/65"><dt>Delivery</dt><dd>{order.deliveryFee === 0 ? "Free" : inr(order.deliveryFee)}</dd></div>
             <div className="flex justify-between pt-1 text-base font-bold text-ink"><dt>Total</dt><dd className="display">{inr(order.totalAmount)}</dd></div>
           </dl>
         </Card>
@@ -142,15 +176,17 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             <Card className="p-5">
               <h2 className="display text-lg font-bold text-ink">Payment pending</h2>
               <p className="mt-2 text-sm text-ink/60">Complete the payment to send this order to the packing shed.</p>
-              <Button className="mt-4 w-full" loading={verifyPayment.isPending} onClick={() => verifyPayment.mutate()}>
+              {paymentError && (
+                <p className="mt-3 rounded-xl bg-[#b3362b]/10 px-3 py-2 text-xs text-[#b3362b]">{paymentError}</p>
+              )}
+              <Button className="mt-4 w-full" loading={verifyPayment.isPending} onClick={retryPayment}>
                 Pay {inr(order.totalAmount)}
               </Button>
+              <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink/40">
+                <ShieldCheck className="h-3.5 w-3.5" /> Payments are handled securely by Razorpay.
+              </p>
             </Card>
           )}
-
-          <p className="text-xs text-ink/40">
-            Placed on {new Date(order.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
-          </p>
         </div>
       </div>
     </div>

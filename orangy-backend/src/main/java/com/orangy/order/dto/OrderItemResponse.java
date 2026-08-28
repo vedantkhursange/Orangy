@@ -18,4 +18,5 @@ public class OrderItemResponse {
     private String variantLabel;
     private BigDecimal unitPrice;
     private int quantity;
+    private BigDecimal lineTotal;
 }

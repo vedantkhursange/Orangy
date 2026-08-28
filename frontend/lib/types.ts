@@ -135,6 +135,8 @@ export type Order = {
   orderStatus: string;
   paymentStatus: string;
   razorpayOrderId: string | null;
+  razorpayKeyId: string | null;
+  amountInPaise: number | null;
   deliveryAddress: Address;
   items: OrderItem[];
   createdAt: string;

@@ -10,6 +10,7 @@ import com.orangy.common.exception.ResourceNotFoundException;
 import com.orangy.order.dto.OrderCreateRequest;
 import com.orangy.order.dto.OrderItemResponse;
 import com.orangy.order.dto.OrderResponse;
+import com.orangy.order.dto.PaymentFailureRequest;
 import com.orangy.order.dto.PaymentVerificationRequest;
 import com.orangy.user.User;
 import com.orangy.user.UserRepository;
@@ -45,6 +46,9 @@ public class OrderService {
 
     @Value("${app.razorpay.key-secret}")
     private String razorpaySecret;
+
+    @Value("${app.razorpay.key-id}")
+    private String razorpayKeyId;
 
     @Transactional
     public OrderResponse createOrder(UUID userId, OrderCreateRequest request) {
@@ -164,6 +168,23 @@ public class OrderService {
         }
     }
 
+    @Transactional
+    public OrderResponse markPaymentFailed(UUID userId, PaymentFailureRequest request) {
+        com.orangy.order.Order order = orderRepository.findByRazorpayOrderId(request.getRazorpayOrderId())
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        if (!order.getUser().getId().equals(userId)) {
+            throw new BadRequestException("Order does not belong to user");
+        }
+
+        if (order.getPaymentStatus() != PaymentStatus.PAID) {
+            order.setPaymentStatus(PaymentStatus.FAILED);
+            log.info("Payment failed for order {}: {}", order.getId(), request.getReason());
+        }
+
+        return toResponse(orderRepository.save(order));
+    }
+
     @Transactional(readOnly = true)
     public OrderResponse getOrderById(UUID userId, String orderId) {
         com.orangy.order.Order order = orderRepository.findById(UUID.fromString(orderId))
@@ -213,6 +234,7 @@ public class OrderService {
                         .variantLabel(item.getVariantLabel())
                         .unitPrice(item.getUnitPrice())
                         .quantity(item.getQuantity())
+                        .lineTotal(item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                         .build())
                 .collect(Collectors.toList());
 
@@ -236,6 +258,8 @@ public class OrderService {
                 .orderStatus(order.getOrderStatus().name())
                 .paymentStatus(order.getPaymentStatus().name())
                 .razorpayOrderId(order.getRazorpayOrderId())
+                .razorpayKeyId(razorpayKeyId)
+                .amountInPaise(order.getTotalAmount().multiply(new BigDecimal("100")).longValue())
                 .deliveryAddress(addressResponse)
                 .items(itemResponses)
                 .createdAt(order.getCreatedAt())
