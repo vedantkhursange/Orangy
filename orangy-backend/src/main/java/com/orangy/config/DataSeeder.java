@@ -70,6 +70,12 @@ public class DataSeeder implements CommandLineRunner {
                 .phone("9999999999")
                 .passwordHash(passwordEncoder.encode(adminPassword))
                 .role(Role.ADMIN)
+                // Lombok's builder ignores the field's own `= false` initializer
+                // without @Builder.Default, so this must be set explicitly.
+                // Without it, a freshly-seeded admin can't log in at all — login
+                // requires email_verified, and there's no signup/OTP step for an
+                // account created this way to ever set it.
+                .emailVerified(true)
                 .build());
     }
 }
