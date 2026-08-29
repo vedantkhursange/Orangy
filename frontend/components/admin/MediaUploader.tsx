@@ -36,7 +36,7 @@ export default function MediaUploader({
       }
       [...files].forEach((file) => {
         if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
-          toast(`${file.name} is over ${MAX_UPLOAD_MB} MB — pick a smaller file.`, "error");
+          toast(`${file.name} is over ${MAX_UPLOAD_MB} MB — that's Cloudinary's own per-file limit on this plan, not something the app restricts. Compress or trim it, or upgrade the Cloudinary plan for larger uploads.`, "error");
           return;
         }
         const id = `${file.name}-${Date.now()}-${Math.random()}`;

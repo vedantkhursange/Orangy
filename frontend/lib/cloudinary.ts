@@ -77,4 +77,13 @@ export function uploadToCloudinary(
   });
 }
 
-export const MAX_UPLOAD_MB = 25;
+/**
+ * Cloudinary's own per-file cap for this account, confirmed empirically
+ * (not documented anywhere we control): a 100MiB probe was rejected at the
+ * edge with a raw 413 before reaching Cloudinary's app servers at all; a
+ * 95MiB probe cleared that gate (it then failed on content, as expected for
+ * a garbage-bytes test file) — so the true ceiling sits in between. This
+ * was previously hardcoded to 25MB for no reason tied to any actual limit.
+ * 95 leaves headroom under the boundary rather than sitting on it.
+ */
+export const MAX_UPLOAD_MB = 95;
