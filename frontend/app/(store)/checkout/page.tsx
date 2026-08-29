@@ -10,8 +10,7 @@ import type { Address, AddressRequest, Order } from "@/lib/types";
 import { useAuth, useCart, useToast } from "@/components/providers/Providers";
 import AddressForm from "@/components/account/AddressForm";
 import OrderSuccessAnimation from "@/components/checkout/OrderSuccessAnimation";
-import { Badge, Button, Card, Dialog, EmptyState } from "@/components/ui/ui";
-import { PageLoader } from "@/components/ui/OrangeLoader";
+import { Badge, Button, Card, Dialog, EmptyState, Spinner } from "@/components/ui/ui";
 
 /**
  * Checkout: pick/add a delivery address → place the order → pay via Razorpay
@@ -105,7 +104,7 @@ export default function CheckoutPage() {
   }
 
   if (loading || cartLoading || addrLoading) {
-    return <PageLoader />;
+    return <div className="flex justify-center py-24"><Spinner /></div>;
   }
 
   if (celebrate && placedOrder) {

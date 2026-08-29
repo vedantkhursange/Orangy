@@ -7,8 +7,7 @@ import { Leaf, Trash2 } from "lucide-react";
 import { api, inr } from "@/lib/api";
 import type { Cart } from "@/lib/types";
 import { useAuth, useCart, useToast } from "@/components/providers/Providers";
-import { Button, Card, EmptyState, QtyStepper } from "@/components/ui/ui";
-import { PageLoader } from "@/components/ui/OrangeLoader";
+import { Button, Card, EmptyState, QtyStepper, Spinner } from "@/components/ui/ui";
 
 export default function CartPage() {
   const { user, loading } = useAuth();
@@ -48,7 +47,7 @@ export default function CartPage() {
   }
 
   if (isLoading || loading) {
-    return <PageLoader />;
+    return <div className="flex justify-center py-24"><Spinner /></div>;
   }
 
   const items = cart?.items ?? [];

@@ -10,8 +10,7 @@ import { useAuth, useCart, useToast } from "@/components/providers/Providers";
 import MediaLightbox from "@/components/product/MediaLightbox";
 import OffersPanel from "@/components/product/OffersPanel";
 import SimilarProducts from "@/components/product/SimilarProducts";
-import { Badge, Button, Card, EmptyState, Pagination, QtyStepper, Stars, Textarea } from "@/components/ui/ui";
-import { PageLoader } from "@/components/ui/OrangeLoader";
+import { Badge, Button, Card, EmptyState, Pagination, QtyStepper, Spinner, Stars, Textarea } from "@/components/ui/ui";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -101,7 +100,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   };
 
   if (isLoading) {
-    return <PageLoader />;
+    return <div className="flex justify-center py-24"><Spinner /></div>;
   }
 
   if (!product) {

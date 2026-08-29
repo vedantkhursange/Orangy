@@ -8,8 +8,7 @@ import { api, inr } from "@/lib/api";
 import { openRazorpayCheckout } from "@/lib/razorpay";
 import type { Order } from "@/lib/types";
 import { useAuth, useToast } from "@/components/providers/Providers";
-import { Badge, Button, Card, EmptyState, statusTone } from "@/components/ui/ui";
-import { PageLoader } from "@/components/ui/OrangeLoader";
+import { Badge, Button, Card, EmptyState, Spinner, statusTone } from "@/components/ui/ui";
 
 const ORDER_FLOW: { status: string; label: string }[] = [
   { status: "PENDING", label: "Placed" },
@@ -70,7 +69,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   };
 
   if (isLoading) {
-    return <PageLoader />;
+    return <div className="flex justify-center py-24"><Spinner /></div>;
   }
 
   if (!order) {
