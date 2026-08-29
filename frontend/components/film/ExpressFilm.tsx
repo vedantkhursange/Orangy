@@ -273,6 +273,9 @@ export default function ExpressFilm() {
       });
 
 
+      // TEMP verification hook
+      (window as unknown as Record<string, unknown>).__applyProgress = applyProgress;
+
       return () => st.kill();
     },
     { scope: wrapRef, dependencies: [reduced] },
