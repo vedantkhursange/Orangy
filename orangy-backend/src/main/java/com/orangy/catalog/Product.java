@@ -39,8 +39,16 @@ public class Product {
     @Builder.Default
     private boolean isActive = true;
 
-    /** Admin-picked for the homepage "Featured" section. */
-    @Column(nullable = false)
+    /**
+     * Admin-picked for the homepage "Featured" section.
+     *
+     * columnDefinition is required, not cosmetic: with ddl-auto=update,
+     * Hibernate's `ADD COLUMN featured boolean NOT NULL` (no default) fails
+     * outright against a table that already has rows — Postgres has nothing
+     * to backfill existing rows with. Caught live against the real dev
+     * database, which already had products in it.
+     */
+    @Column(nullable = false, columnDefinition = "boolean default false")
     @Builder.Default
     private boolean featured = false;
 
