@@ -1,25 +1,12 @@
 import type { NextConfig } from "next";
 
 /**
- * The Spring backend has no CORS configuration, so the browser never talks to
- * it directly: every /backend/* request is proxied server-side by Next.
- * Override the target with BACKEND_URL when it moves.
+ * /backend/* is proxied to the Spring backend by app/backend/[...path]/route.ts
+ * (a Route Handler, not a next.config rewrite — see that file for why).
  */
-const BACKEND_URL = process.env.BACKEND_URL ?? "http://130.210.4.172:30080";
-// TEMP DIAGNOSTIC — remove once the prod misroute is understood.
-console.log(`[next.config] process.env.BACKEND_URL=${JSON.stringify(process.env.BACKEND_URL)} resolved BACKEND_URL=${BACKEND_URL}`);
-
 const nextConfig: NextConfig = {
   // Standalone server bundle for the Docker image (node server.js)
   output: "standalone",
-  async rewrites() {
-    return [
-      {
-        source: "/backend/:path*",
-        destination: `${BACKEND_URL}/:path*`,
-      },
-    ];
-  },
 };
 
 export default nextConfig;
