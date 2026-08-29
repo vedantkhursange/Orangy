@@ -6,6 +6,8 @@ import type { NextConfig } from "next";
  * Override the target with BACKEND_URL when it moves.
  */
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://130.210.4.172:30080";
+// TEMP DIAGNOSTIC — remove once the prod misroute is understood.
+console.log(`[next.config] process.env.BACKEND_URL=${JSON.stringify(process.env.BACKEND_URL)} resolved BACKEND_URL=${BACKEND_URL}`);
 
 const nextConfig: NextConfig = {
   // Standalone server bundle for the Docker image (node server.js)
