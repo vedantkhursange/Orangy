@@ -38,6 +38,13 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
+    @GetMapping("/featured")
+    @Operation(summary = "List admin-picked products for the homepage featured section")
+    public ResponseEntity<ApiResponse<List<ProductSummaryResponse>>> listFeatured(
+            @RequestParam(defaultValue = "4") int limit) {
+        return ResponseEntity.ok(ApiResponse.success(productService.listFeatured(limit)));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Get full product details with all variants")
     public ResponseEntity<ApiResponse<ProductResponse>> getProduct(@PathVariable UUID id) {

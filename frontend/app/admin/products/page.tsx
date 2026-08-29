@@ -74,6 +74,7 @@ export default function AdminProductsPage() {
                           )}
                         </span>
                         <span className="font-semibold text-ink">{p.name}</span>
+                        {p.featured && <Badge tone="success">Featured</Badge>}
                       </div>
                     </td>
                     <td className="px-4 py-3"><Badge tone="orange">{p.category}</Badge></td>
@@ -122,6 +123,7 @@ function ProductForm({ product, onDone }: { product?: Product; onDone: (p: Produ
     category: product?.category ?? "",
     organicCertified: product?.organicCertified ?? false,
     farmSource: product?.farmSource ?? "",
+    featured: product?.featured ?? false,
   });
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -171,6 +173,15 @@ function ProductForm({ product, onDone }: { product?: Product; onDone: (p: Produ
           className="h-4 w-4 accent-[--orange]"
         />
         Organic certified
+      </label>
+      <label className="flex items-center gap-2 text-sm text-ink/75">
+        <input
+          type="checkbox"
+          checked={form.featured ?? false}
+          onChange={(e) => setForm((f) => ({ ...f, featured: e.target.checked }))}
+          className="h-4 w-4 accent-[--orange]"
+        />
+        Featured on homepage
       </label>
       <Button type="submit" loading={save.isPending}>{product ? "Save changes" : "Create product"}</Button>
     </form>

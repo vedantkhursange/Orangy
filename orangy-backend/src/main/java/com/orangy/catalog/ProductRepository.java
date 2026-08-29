@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,4 +26,6 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
             Pageable pageable);
 
     Optional<Product> findByIdAndIsActiveTrue(UUID id);
+
+    List<Product> findByIsActiveTrueAndFeaturedTrueOrderByCreatedAtDesc(Pageable pageable);
 }

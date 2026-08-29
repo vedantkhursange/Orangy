@@ -20,5 +20,6 @@ public class ProductResponse {
     private boolean organicCertified;
     private String farmSource;
     private boolean active;
+    private boolean featured;
     private List<VariantResponse> variants;
 }

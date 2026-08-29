@@ -33,4 +33,23 @@ public class MediaController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(media));
     }
+
+    @GetMapping("/gallery")
+    @Operation(summary = "Get the homepage gallery — admin-managed images and videos")
+    public ResponseEntity<ApiResponse<List<MediaAssetResponse>>> getGallery() {
+        return ResponseEntity.ok(ApiResponse.success(byRefType(RefType.FARM_GALLERY)));
+    }
+
+    @GetMapping("/story")
+    @Operation(summary = "Get the Our Story slideshow — admin-managed images and videos")
+    public ResponseEntity<ApiResponse<List<MediaAssetResponse>>> getStory() {
+        return ResponseEntity.ok(ApiResponse.success(byRefType(RefType.STORY)));
+    }
+
+    private List<MediaAssetResponse> byRefType(RefType refType) {
+        return mediaAssetRepository.findByRefTypeOrderBySortOrderAsc(refType)
+                .stream()
+                .map(MediaMapper::toResponse)
+                .collect(Collectors.toList());
+    }
 }

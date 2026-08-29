@@ -29,6 +29,15 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    public List<ProductSummaryResponse> listFeatured(int limit) {
+        return productRepository
+                .findByIsActiveTrueAndFeaturedTrueOrderByCreatedAtDesc(org.springframework.data.domain.PageRequest.of(0, limit))
+                .stream()
+                .map(this::toSummary)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public ProductResponse getProduct(UUID id) {
         Product product = productRepository.findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + id));
@@ -55,6 +64,7 @@ public class ProductService {
                 .organicCertified(request.isOrganicCertified())
                 .farmSource(request.getFarmSource())
                 .isActive(true)
+                .featured(request.isFeatured())
                 .build();
         product = productRepository.save(product);
         return toFullResponse(product);
@@ -69,6 +79,7 @@ public class ProductService {
         product.setCategory(request.getCategory());
         product.setOrganicCertified(request.isOrganicCertified());
         product.setFarmSource(request.getFarmSource());
+        product.setFeatured(request.isFeatured());
         product = productRepository.save(product);
         return toFullResponse(product);
     }
@@ -137,9 +148,11 @@ public class ProductService {
         return ProductSummaryResponse.builder()
                 .id(product.getId())
                 .name(product.getName())
+                .description(product.getDescription())
                 .category(product.getCategory())
                 .startingPrice(startingPrice)
                 .thumbnailUrl(thumbnail)
+                .featured(product.isFeatured())
                 .build();
     }
 
@@ -156,6 +169,7 @@ public class ProductService {
                 .organicCertified(product.isOrganicCertified())
                 .farmSource(product.getFarmSource())
                 .active(product.isActive())
+                .featured(product.isFeatured())
                 .variants(variants)
                 .build();
     }

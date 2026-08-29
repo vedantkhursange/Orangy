@@ -39,6 +39,11 @@ public class Product {
     @Builder.Default
     private boolean isActive = true;
 
+    /** Admin-picked for the homepage "Featured" section. */
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean featured = false;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

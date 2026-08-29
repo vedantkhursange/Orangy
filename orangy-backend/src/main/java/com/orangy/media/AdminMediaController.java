@@ -11,6 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
@@ -21,6 +24,20 @@ public class AdminMediaController {
     private final CaretakerRepository caretakerRepository;
 
     // ---- Media Assets ----
+
+    @GetMapping("/media")
+    @Operation(summary = "List media assets by ref type, e.g. for the Gallery/Our Story admin panels")
+    public ResponseEntity<ApiResponse<List<MediaAssetResponse>>> listMedia(
+            @RequestParam RefType refType,
+            @RequestParam(required = false) String refId) {
+        List<MediaAsset> assets = refId != null
+                ? mediaAssetRepository.findByRefTypeAndRefIdOrderBySortOrderAsc(refType, refId)
+                : mediaAssetRepository.findByRefTypeOrderBySortOrderAsc(refType);
+        List<MediaAssetResponse> response = assets.stream()
+                .map(MediaMapper::toResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
 
     @PostMapping("/media")
     @Operation(summary = "Create a media asset (URL-based, no file upload)")

@@ -17,4 +17,5 @@ public class ProductCreateRequest {
     private String category;
     private boolean organicCertified;
     private String farmSource;
+    private boolean featured;
 }

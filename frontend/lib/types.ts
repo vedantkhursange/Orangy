@@ -36,9 +36,11 @@ export type UserProfile = {
 export type ProductSummary = {
   id: string;
   name: string;
+  description: string | null;
   category: string;
   startingPrice: number | null;
   thumbnailUrl: string | null;
+  featured: boolean;
 };
 
 export type Variant = {
@@ -59,6 +61,7 @@ export type Product = {
   organicCertified: boolean;
   farmSource: string | null;
   active: boolean;
+  featured: boolean;
   variants: Variant[];
 };
 
@@ -79,7 +82,8 @@ export type MediaAsset = {
   refType: string;
   type: "IMAGE" | "VIDEO";
   url: string;
-  refId: string;
+  /** Set for refType=PRODUCT; null for ref-type-only collections like the gallery/story. */
+  refId: string | null;
   altText: string | null;
   sortOrder: number;
 };
@@ -161,6 +165,7 @@ export type ProductCreateRequest = {
   category: string;
   organicCertified?: boolean;
   farmSource?: string;
+  featured?: boolean;
 };
 
 export type VariantCreateRequest = {
