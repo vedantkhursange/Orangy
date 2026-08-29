@@ -17,8 +17,12 @@ export default function SmoothScroll({ children }: { children: ReactNode }) {
     if (prefersReduced) return;
 
     const lenis = new Lenis({
-      duration: 1.15,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      // A short, gentle ease-out that only takes the edge off raw wheel
+      // deltas — not a slow virtual-scroll takeover. The previous 1.15s
+      // exponential curve is what read as "slippery" and "doesn't stop":
+      // it kept gliding well after the user's own scroll gesture ended.
+      duration: 0.5,
+      easing: (t) => 1 - Math.pow(1 - t, 3),
       touchMultiplier: 1.6,
     });
 

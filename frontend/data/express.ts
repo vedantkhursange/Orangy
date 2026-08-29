@@ -31,16 +31,25 @@ export type ExpressShot = {
 
 export const EXPRESS = {
   modelPath: "/models/orange-express.glb",
-  /** Total pinned scroll distance, in viewport-heights. */
-  scrollVh: 200,
-  mobileScrollVh: 190,
   /**
-   * Scroll progress (0..1) at which each beat takes over. The first boundary
-   * is deliberately tiny — Lenis eases over ~1.15s, so anything larger needs
-   * several wheel notches before the opening flight commits. The rest are
-   * spaced to give each shot room to land before the next can fire.
+   * Total pinned scroll distance, in viewport-heights. Wide on purpose: with
+   * 4 beats evenly spaced, a narrower range means a single normal scroll
+   * gesture covers a large fraction of it and can land past the next beat
+   * entirely — ScrollTrigger only samples progress once per animation
+   * frame, so a fast flick can jump straight from beat 0 to beat 2 or 3 if
+   * their zones are only a few percent of the total wide.
    */
-  thresholds: [0, 0.012, 0.3, 0.6],
+  scrollVh: 420,
+  mobileScrollVh: 380,
+  /**
+   * Scroll progress (0..1) at which each beat takes over — evenly spaced.
+   * An earlier version made the first zone tiny (0.012) so the opening
+   * flight committed on the smallest nudge; that unevenness is exactly what
+   * made it feel unnatural — one beat needing barely any scroll and the
+   * next needing a lot. Equal zones plus the wider scrollVh above make each
+   * beat need roughly the same, moderate amount of scrolling.
+   */
+  thresholds: [0, 0.25, 0.5, 0.75],
   ease: "power2.inOut",
   /**
    * Where the camera sits before the page-load reveal: further out and swung

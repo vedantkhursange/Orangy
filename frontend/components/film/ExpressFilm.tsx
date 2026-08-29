@@ -247,14 +247,19 @@ export default function ExpressFilm() {
         return i;
       };
 
-      let current = -1;
+      let current = 0;
       const applyProgress = (p: number) => {
-        const next = beatFor(p);
-        if (next === current) return;
-        current = next;
-        pendingBeatRef.current = next;
-        setBeat(next);
-        sceneRef.current?.flyTo(next);
+        const target = beatFor(p);
+        if (target === current) return;
+        // Step at most one beat per update, regardless of how far `target`
+        // is. onUpdate fires once per animation frame — a fast fling can
+        // easily cross several zones within one frame, and without this the
+        // camera would jump straight to the last one, skipping every beat
+        // in between rather than flying through each in turn.
+        current += target > current ? 1 : -1;
+        pendingBeatRef.current = current;
+        setBeat(current);
+        sceneRef.current?.flyTo(current);
       };
 
       const st = ScrollTrigger.create({

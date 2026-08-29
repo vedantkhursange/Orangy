@@ -163,6 +163,7 @@ export function Dialog({
     <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div
+        data-lenis-prevent
         className={`relative max-h-[88vh] w-full ${wide ? "max-w-3xl" : "max-w-lg"} overflow-y-auto rounded-2xl border border-ink/10 bg-cream p-6 shadow-2xl`}
       >
         <div className="mb-5 flex items-center justify-between">
