@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Leaf } from "lucide-react";
@@ -56,12 +55,14 @@ function ProductCard({ product }: { product: ProductSummary }) {
         style={{ aspectRatio: "4/5" }}
       >
         {product.thumbnailUrl ? (
-          <Image
+          // Cloudinary URL — next/image needs the host allow-listed via
+          // images.remotePatterns, which isn't configured; matches the
+          // plain <img> convention already used elsewhere for this.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={product.thumbnailUrl}
             alt={product.name}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            className="object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-sand">

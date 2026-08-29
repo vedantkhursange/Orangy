@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import Reveal from "@/components/animations/Reveal";
@@ -49,12 +48,14 @@ export default function Gallery() {
 function GalleryImageTile({ item }: { item: MediaAsset }) {
   return (
     <figure data-reveal className="group relative overflow-hidden rounded-3xl" style={{ aspectRatio: "4/5" }}>
-      <Image
+      {/* Cloudinary URLs — next/image needs the host allow-listed via
+          images.remotePatterns, which isn't configured; the rest of the
+          codebase already uses a plain <img> for the same reason. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         src={item.url}
         alt={item.altText ?? ""}
-        fill
-        sizes="(max-width: 640px) 50vw, 33vw"
-        className="object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
       />
     </figure>
   );
