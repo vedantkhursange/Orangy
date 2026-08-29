@@ -9,6 +9,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -61,6 +62,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error("Access denied"));
+    }
+
+    /**
+     * "No handler for this URL" is not a server error — it was being caught by
+     * the catch-all below and reported as a 500. That masked a genuinely
+     * missing dependency: Actuator's health endpoints didn't exist in the
+     * running image, so `/actuator/health` fell through to Spring's static
+     * resource handler and came back as a false 500 instead of a plain 404,
+     * which is what broke the Kubernetes readiness probe's diagnosability.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoResource(NoResourceFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error("Not found"));
     }
 
     @ExceptionHandler(Exception.class)
