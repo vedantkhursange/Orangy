@@ -17,12 +17,17 @@ export default function SmoothScroll({ children }: { children: ReactNode }) {
     if (prefersReduced) return;
 
     const lenis = new Lenis({
-      // A short, gentle ease-out that only takes the edge off raw wheel
-      // deltas — not a slow virtual-scroll takeover. The previous 1.15s
-      // exponential curve is what read as "slippery" and "doesn't stop":
-      // it kept gliding well after the user's own scroll gesture ended.
-      duration: 0.5,
-      easing: (t) => 1 - Math.pow(1 - t, 3),
+      // Touch already felt native/responsive — that's because Lenis's own
+      // `syncTouch` defaults to false, so touch input was never smoothed at
+      // all; the browser's native momentum handles it. `smoothWheel`
+      // defaults to true, though, which is what made desktop (trackpad/mouse
+      // wheel) feel laggy — every wheel tick was replaced with a Lenis-
+      // animated glide. Disabling it makes wheel behave the same way touch
+      // already does: instant, native, no animation layered on top.
+      smoothWheel: false,
+      // Still used for whatever Lenis DOES animate itself — e.g. a
+      // programmatic .scrollTo() call — so those aren't a single jump-cut.
+      lerp: 0.35,
       touchMultiplier: 1.6,
     });
 
