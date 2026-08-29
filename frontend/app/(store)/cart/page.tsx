@@ -7,7 +7,8 @@ import { Leaf, Trash2 } from "lucide-react";
 import { api, inr } from "@/lib/api";
 import type { Cart } from "@/lib/types";
 import { useAuth, useCart, useToast } from "@/components/providers/Providers";
-import { Button, Card, EmptyState, QtyStepper, Skeleton } from "@/components/ui/ui";
+import { Button, Card, EmptyState, QtyStepper } from "@/components/ui/ui";
+import { PageLoader } from "@/components/ui/OrangeLoader";
 
 export default function CartPage() {
   const { user, loading } = useAuth();
@@ -47,11 +48,7 @@ export default function CartPage() {
   }
 
   if (isLoading || loading) {
-    return (
-      <div className="mx-auto max-w-5xl space-y-4 px-4 py-10">
-        {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24" />)}
-      </div>
-    );
+    return <PageLoader />;
   }
 
   const items = cart?.items ?? [];

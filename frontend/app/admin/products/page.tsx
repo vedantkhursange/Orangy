@@ -9,6 +9,7 @@ import { useToast } from "@/components/providers/Providers";
 import ImageUploadField from "@/components/admin/ImageUploadField";
 import MediaUploader from "@/components/admin/MediaUploader";
 import { Badge, Button, Card, Dialog, EmptyState, Input, Label, Pagination, Select, Skeleton, Textarea } from "@/components/ui/ui";
+import { PageLoader } from "@/components/ui/OrangeLoader";
 
 /* ─────────────────────── page ─────────────────────── */
 
@@ -197,7 +198,7 @@ function ManageProduct({ id }: { id: string }) {
     queryFn: () => api.get<Product>(`/api/products/${id}`),
   });
 
-  if (isLoading || !product) return <Skeleton className="h-64" />;
+  if (isLoading || !product) return <PageLoader className="flex justify-center py-12" />;
 
   return (
     <div>

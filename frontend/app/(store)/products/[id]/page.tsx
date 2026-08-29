@@ -10,7 +10,8 @@ import { useAuth, useCart, useToast } from "@/components/providers/Providers";
 import MediaLightbox from "@/components/product/MediaLightbox";
 import OffersPanel from "@/components/product/OffersPanel";
 import SimilarProducts from "@/components/product/SimilarProducts";
-import { Badge, Button, Card, EmptyState, Pagination, QtyStepper, Skeleton, Stars, Textarea } from "@/components/ui/ui";
+import { Badge, Button, Card, EmptyState, Pagination, QtyStepper, Stars, Textarea } from "@/components/ui/ui";
+import { PageLoader } from "@/components/ui/OrangeLoader";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -100,17 +101,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   };
 
   if (isLoading) {
-    return (
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 md:grid-cols-2 md:px-8">
-        <Skeleton className="aspect-square" />
-        <div className="space-y-4">
-          <Skeleton className="h-8 w-2/3" />
-          <Skeleton className="h-5 w-1/3" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-12 w-1/2" />
-        </div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!product) {

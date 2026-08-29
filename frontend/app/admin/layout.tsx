@@ -6,7 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { Images, LayoutDashboard, Package, ShoppingBag, Sprout, Star } from "lucide-react";
 import Navbar from "@/components/navigation/Navbar";
 import { useAuth } from "@/components/providers/Providers";
-import { Button, EmptyState, Spinner } from "@/components/ui/ui";
+import { Button, EmptyState } from "@/components/ui/ui";
+import { PageLoader } from "@/components/ui/OrangeLoader";
 
 const nav = [
   { label: "Overview", href: "/admin", icon: LayoutDashboard },
@@ -63,7 +64,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </div>
 
           {loading ? (
-            <div className="flex justify-center py-24"><Spinner /></div>
+            <PageLoader />
           ) : !user ? (
             <EmptyState title="Admin access required" sub="Log in with a grove admin account." action={<Button onClick={() => router.push("/login")}>Log in</Button>} />
           ) : user.role !== "ADMIN" ? (
