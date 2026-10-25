@@ -3,21 +3,20 @@
 import { use, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BadgeCheck, Leaf, MapPin, ShoppingCart, Zap } from "lucide-react";
+import { BadgeCheck, MapPin, ShieldCheck, ShoppingCart, Truck, Zap } from "lucide-react";
 import { api, inr } from "@/lib/api";
 import type { Cart, MediaAsset, Page as SpringPage, Product, Review } from "@/lib/types";
 import { useAuth, useCart, useToast } from "@/components/providers/Providers";
-import MediaLightbox from "@/components/product/MediaLightbox";
+import ProductGallery from "@/components/product/ProductGallery";
+import type { ViewerItem } from "@/components/media/MediaViewer";
 import OffersPanel from "@/components/product/OffersPanel";
 import SimilarProducts from "@/components/product/SimilarProducts";
-import { Badge, Button, Card, EmptyState, Pagination, QtyStepper, Spinner, Stars, Textarea } from "@/components/ui/ui";
+import { Badge, Button, Card, EmptyState, Pagination, QtyStepper, Skeleton, Stars, Textarea } from "@/components/ui/ui";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [variantId, setVariantId] = useState<string | null>(null);
   const [variantError, setVariantError] = useState(false);
-  const [activeImage, setActiveImage] = useState(0);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [buyingNow, setBuyingNow] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -35,15 +34,28 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     queryFn: () => api.get<MediaAsset[]>(`/api/media/product/${id}`),
   });
 
-  // No variant is pre-selected — the shopper must choose a pack explicitly.
-  const variant = useMemo(() => product?.variants?.find((v) => v.id === variantId) ?? null, [product, variantId]);
+  // Default to the cheapest in-stock pack (Swiggy/Zepto pattern) so a single
+  // tap can add to basket; the shopper can still switch packs.
+  const defaultVariantId = useMemo(() => {
+    const all = product?.variants ?? [];
+    const inStock = all.filter((v) => v.stockCount > 0);
+    return [...(inStock.length ? inStock : all)].sort((a, b) => a.price - b.price)[0]?.id ?? null;
+  }, [product]);
+  const variant = useMemo(
+    () => product?.variants?.find((v) => v.id === (variantId ?? defaultVariantId)) ?? null,
+    [product, variantId, defaultVariantId],
+  );
 
-  const images = useMemo(() => {
-    const urls: { url: string; alt: string }[] = [];
-    for (const m of media ?? []) if (m.type === "IMAGE") urls.push({ url: m.url, alt: m.altText ?? product?.name ?? "" });
-    for (const v of product?.variants ?? []) if (v.thumbnailImageUrl) urls.push({ url: v.thumbnailImageUrl, alt: v.label });
+  const mediaItems = useMemo(() => {
+    const out: ViewerItem[] = [];
+    const sorted = [...(media ?? [])].sort((a, b) => a.sortOrder - b.sortOrder);
+    sorted.forEach((m, i) =>
+      out.push({ type: m.type, url: m.url, alt: m.altText || `${product?.name ?? "Product"} photo ${i + 1}` }),
+    );
+    for (const v of product?.variants ?? [])
+      if (v.thumbnailImageUrl) out.push({ type: "IMAGE", url: v.thumbnailImageUrl, alt: `${product?.name ?? ""} ${v.label}`.trim() });
     const seen = new Set<string>();
-    return urls.filter((u) => !seen.has(u.url) && seen.add(u.url));
+    return out.filter((u) => !seen.has(u.url) && seen.add(u.url));
   }, [media, product]);
 
   // Quantity of the selected variant already sitting in the server cart —
@@ -100,7 +112,18 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   };
 
   if (isLoading) {
-    return <div className="flex justify-center py-24"><Spinner /></div>;
+    return (
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 md:grid-cols-2 md:px-8">
+        <Skeleton className="aspect-square w-full rounded-[28px]" />
+        <div className="space-y-4">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-10 w-3/4" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-16 w-2/3" />
+          <Skeleton className="h-12 w-1/2 rounded-full" />
+        </div>
+      </div>
+    );
   }
 
   if (!product) {
@@ -111,65 +134,64 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     );
   }
 
-  // Only a genuinely out-of-stock *selected* variant disables buying — no
-  // variant chosen yet must stay clickable so it can trigger validation.
   const outOfStock = variant ? variant.stockCount <= 0 : false;
 
+  const basketControl = (size: "md" | "lg") =>
+    cartQty > 0 && variant && !outOfStock ? (
+      <div className="flex items-center rounded-2xl border border-action/30 bg-action/8 px-2 py-1">
+        <QtyStepper
+          value={cartQty}
+          max={variant.stockCount}
+          min={0}
+          onChange={(next) => {
+            if (next <= 0) removeFromCart.mutate();
+            else updateCartQty.mutate(next);
+          }}
+        />
+      </div>
+    ) : (
+      <Button size={size} variant="action" disabled={outOfStock} loading={addToCart.isPending} onClick={handleAddToBasket}>
+        <ShoppingCart className="h-4 w-4" /> {outOfStock ? "Out of stock" : "Add to Basket"}
+      </Button>
+    );
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">
-      <div className="grid gap-10 md:grid-cols-2">
+    <div className="mx-auto max-w-7xl px-4 pb-28 pt-4 md:px-8 md:pb-12 md:pt-10">
+      <div className="grid gap-8 md:grid-cols-2 md:gap-12">
         {/* gallery */}
-        <div>
-          <div
-            onClick={() => images.length > 0 && setLightboxOpen(true)}
-            className={`relative aspect-square overflow-hidden rounded-3xl border border-ink/8 bg-sand ${images.length > 0 ? "cursor-zoom-in" : ""}`}
-          >
-            {images.length > 0 ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={images[Math.min(activeImage, images.length - 1)].url} alt={images[0].alt} className="h-full w-full object-cover" />
-            ) : (
-              <div className="flex h-full items-center justify-center"><Leaf className="h-16 w-16 text-orange/30" /></div>
-            )}
-          </div>
-          {images.length > 1 && (
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-              {images.map((img, i) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  key={img.url}
-                  src={img.url}
-                  alt={img.alt}
-                  onClick={() => setActiveImage(i)}
-                  className={`h-18 w-18 shrink-0 cursor-pointer rounded-xl border-2 object-cover ${i === activeImage ? "border-orange" : "border-transparent opacity-70 hover:opacity-100"}`}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        <ProductGallery items={mediaItems} />
 
         {/* info */}
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone="orange">{product.category}</Badge>
+            {product.category && <Badge tone="orange">{product.category}</Badge>}
             {product.organicCertified && (
               <Badge tone="success"><BadgeCheck className="mr-1 h-3 w-3" /> Organic certified</Badge>
             )}
           </div>
-          <h1 className="display mt-3 text-3xl font-bold text-ink md:text-4xl">{product.name}</h1>
+          <h1 className="display mt-3 text-3xl font-extrabold leading-tight text-ink md:text-[42px]">{product.name}</h1>
           {product.farmSource && (
-            <p className="mt-2 flex items-center gap-1.5 text-sm text-ink/60">
-              <MapPin className="h-4 w-4 text-orange-deep" /> Grown at {product.farmSource}
+            <p className="mt-2 flex items-center gap-1.5 text-sm text-muted">
+              <MapPin className="h-4 w-4 text-brand" /> Grown at {product.farmSource}
             </p>
           )}
-          {product.description && <p className="mt-4 max-w-lg leading-relaxed text-ink/70">{product.description}</p>}
+
+          {variant && (
+            <p className="mt-5 flex items-baseline gap-2">
+              <span className="display text-3xl font-extrabold text-ink">{inr(variant.price)}</span>
+              <span className="text-sm font-medium text-muted">/ {variant.label}</span>
+            </p>
+          )}
+
+          {product.description && <p className="mt-4 max-w-lg leading-relaxed text-ink/75">{product.description}</p>}
 
           {/* variant selector */}
           <div className="mt-7">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink/55">Choose a pack</p>
+            <p className="mb-2.5 text-xs font-bold uppercase tracking-wider text-muted">Choose a pack</p>
             <div
               className={[
-                "flex flex-wrap gap-2.5 rounded-2xl transition",
-                variantError && "-m-2 border-2 border-[#b3362b] p-2",
+                "grid grid-cols-2 gap-2.5 rounded-2xl transition sm:grid-cols-3",
+                variantError && "-m-2 border-2 border-danger p-2",
               ].filter(Boolean).join(" ")}
             >
               {product.variants.map((v) => {
@@ -180,15 +202,21 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     key={v.id}
                     onClick={() => { setVariantId(v.id); setVariantError(false); }}
                     disabled={empty}
+                    aria-pressed={active}
                     className={[
-                      "rounded-xl border px-4 py-2.5 text-left transition",
-                      active ? "border-orange bg-orange/8 ring-2 ring-orange/25" : "border-ink/15 hover:border-orange/60",
+                      "relative rounded-2xl border-2 bg-surface px-4 py-3 text-left transition",
+                      active ? "border-brand bg-brand/6 shadow-card" : "border-line hover:border-brand/50",
                       empty && "opacity-45",
                     ].filter(Boolean).join(" ")}
                   >
-                    <span className="block text-sm font-semibold text-ink">{v.label}</span>
-                    <span className="display block text-base font-bold text-orange-deep">{inr(v.price)}</span>
-                    <span className={`block text-[11px] ${empty ? "text-[#b3362b]" : v.stockCount <= 5 ? "text-orange-deep" : "text-ink/45"}`}>
+                    {active && (
+                      <span className="absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-brand text-white">
+                        <BadgeCheck className="h-3.5 w-3.5" />
+                      </span>
+                    )}
+                    <span className="block text-sm font-bold text-ink">{v.label}</span>
+                    <span className="display mt-0.5 block text-lg font-extrabold text-ink">{inr(v.price)}</span>
+                    <span className={`mt-0.5 block text-[11px] font-semibold ${empty ? "text-danger" : v.stockCount <= 5 ? "text-brand" : "text-action"}`}>
                       {empty ? "Out of stock" : v.stockCount <= 5 ? `Only ${v.stockCount} left` : "In stock"}
                     </span>
                   </button>
@@ -196,62 +224,51 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               })}
             </div>
             {variantError && (
-              <p className="mt-2 text-sm font-medium text-[#b3362b]">Please select a pack to continue.</p>
+              <p className="mt-2 text-sm font-medium text-danger">Please select a pack to continue.</p>
             )}
           </div>
 
-          {/* buy row */}
-          <div className="mt-7 flex flex-wrap items-center gap-3">
-            {cartQty > 0 && variant && !outOfStock ? (
-              <div className="flex items-center gap-2 rounded-full border border-orange/40 bg-orange/8 px-2 py-1.5">
-                <QtyStepper
-                  value={cartQty}
-                  max={variant.stockCount}
-                  onChange={(next) => {
-                    if (next <= 0) removeFromCart.mutate();
-                    else updateCartQty.mutate(next);
-                  }}
-                />
-              </div>
-            ) : (
-              <Button
-                size="lg"
-                variant="outline"
-                disabled={outOfStock}
-                loading={addToCart.isPending}
-                onClick={handleAddToBasket}
-              >
-                <ShoppingCart className="h-4 w-4" /> {outOfStock ? "Out of stock" : "Add to Basket"}
-              </Button>
-            )}
-
+          {/* buy row (desktop; phones get the sticky bar) */}
+          <div className="mt-7 hidden flex-wrap items-center gap-3 md:flex">
+            {basketControl("lg")}
             <Button size="lg" disabled={outOfStock} loading={buyingNow} onClick={handleBuyNow}>
               <Zap className="h-4 w-4" /> Buy Now
             </Button>
-
-            {variant && !outOfStock && (
-              <span className="text-sm text-ink/55">
-                <span className="display font-bold text-ink">{inr(variant.price)}</span> / {variant.label}
-              </span>
-            )}
           </div>
+
+          <ul className="mt-7 grid grid-cols-3 gap-2 text-center text-[11px] font-semibold text-muted">
+            <li className="rounded-2xl bg-surface-2 px-2 py-3"><Truck className="mx-auto mb-1 h-5 w-5 text-brand" />Picked to order</li>
+            <li className="rounded-2xl bg-surface-2 px-2 py-3"><BadgeCheck className="mx-auto mb-1 h-5 w-5 text-action" />Farmer-owned</li>
+            <li className="rounded-2xl bg-surface-2 px-2 py-3"><ShieldCheck className="mx-auto mb-1 h-5 w-5 text-ink/60" />Secure payment</li>
+          </ul>
 
           <OffersPanel />
         </div>
       </div>
 
-      {lightboxOpen && images.length > 0 && (
-        <MediaLightbox
-          images={images}
-          index={Math.min(activeImage, images.length - 1)}
-          onIndexChange={setActiveImage}
-          onClose={() => setLightboxOpen(false)}
-        />
-      )}
-
       {product.category && <SimilarProducts category={product.category} excludeId={id} />}
 
       <ReviewsSection productId={id} />
+
+      {/* sticky buy bar on phones */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur md:hidden">
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            {variant ? (
+              <>
+                <p className="display text-lg font-extrabold leading-none text-ink">{inr(variant.price)}</p>
+                <p className="mt-1 truncate text-xs text-muted">{variant.label}</p>
+              </>
+            ) : (
+              <p className="text-sm font-semibold text-muted">Choose a pack</p>
+            )}
+          </div>
+          {basketControl("md")}
+          <Button size="md" disabled={outOfStock} loading={buyingNow} onClick={handleBuyNow}>
+            Buy
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

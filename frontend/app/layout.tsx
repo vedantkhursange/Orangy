@@ -3,6 +3,7 @@ import { Outfit, Inter } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/components/animations/SmoothScroll";
 import Providers from "@/components/providers/Providers";
+import BottomNav from "@/components/navigation/BottomNav";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -43,13 +44,17 @@ const themeInit = `try{if(localStorage.getItem('orangy-theme')==='dark')document
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${outfit.variable} ${inter.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="en-IN" className={`${outfit.variable} ${inter.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
       <body className="min-h-full flex flex-col bg-cream text-ink">
+        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-brand focus:px-4 focus:py-2 focus:font-bold focus:text-white">
+          Skip to content
+        </a>
         <Providers>
           <SmoothScroll>{children}</SmoothScroll>
+          <BottomNav />
         </Providers>
       </body>
     </html>

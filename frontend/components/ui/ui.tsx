@@ -5,7 +5,7 @@ import { Loader2, Minus, Plus, Star, X } from "lucide-react";
 
 /* ── Button ── */
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "outline" | "ghost" | "danger";
+  variant?: "primary" | "action" | "outline" | "ghost" | "danger";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
 };
@@ -19,19 +19,20 @@ export function Button({
   ...rest
 }: ButtonProps) {
   const variants = {
-    primary: "bg-orange text-white hover:bg-orange-deep shadow-md shadow-orange/20",
-    outline: "border border-ink/20 text-ink hover:border-orange hover:text-orange-deep",
-    ghost: "text-ink/75 hover:bg-sand hover:text-ink",
-    danger: "bg-[#b3362b] text-white hover:bg-[#992e24]",
+    primary: "bg-brand text-white hover:brightness-95 shadow-[0_8px_20px_-8px] shadow-brand/60",
+    action: "bg-action text-white hover:bg-action-deep shadow-[0_8px_20px_-8px] shadow-action/60",
+    outline: "border-2 border-line bg-surface text-ink hover:border-brand hover:text-brand-deep",
+    ghost: "text-ink/75 hover:bg-surface-2 hover:text-ink",
+    danger: "bg-danger text-white hover:brightness-95",
   };
   const sizes = {
-    sm: "px-3.5 py-1.5 text-xs",
-    md: "px-5 py-2.5 text-sm",
-    lg: "px-7 py-3.5 text-base",
+    sm: "px-3.5 py-1.5 text-xs rounded-xl",
+    md: "px-5 py-2.5 text-sm rounded-xl",
+    lg: "px-7 py-3.5 text-base rounded-2xl",
   };
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 rounded-full font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 font-bold tracking-tight transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${sizes[size]} ${className}`}
       disabled={disabled || loading}
       {...rest}
     >
@@ -49,7 +50,7 @@ export function Label({ children }: { children: ReactNode }) {
 export function Input({ className = "", ...rest }: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={`w-full rounded-xl border border-ink/15 bg-cream-soft px-4 py-2.5 text-sm text-ink outline-none transition placeholder:text-ink/35 focus:border-orange focus:ring-2 focus:ring-orange/20 ${className}`}
+      className={`w-full rounded-xl border border-line bg-surface px-4 py-2.5 text-sm text-ink outline-none transition placeholder:text-muted/70 focus:border-brand focus:ring-4 focus:ring-brand/15 ${className}`}
       {...rest}
     />
   );
@@ -58,7 +59,7 @@ export function Input({ className = "", ...rest }: InputHTMLAttributes<HTMLInput
 export function Textarea({ className = "", ...rest }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
-      className={`w-full rounded-xl border border-ink/15 bg-cream-soft px-4 py-2.5 text-sm text-ink outline-none transition placeholder:text-ink/35 focus:border-orange focus:ring-2 focus:ring-orange/20 ${className}`}
+      className={`w-full rounded-xl border border-line bg-surface px-4 py-2.5 text-sm text-ink outline-none transition placeholder:text-muted/70 focus:border-brand focus:ring-4 focus:ring-brand/15 ${className}`}
       {...rest}
     />
   );
@@ -78,7 +79,7 @@ export function Select({ className = "", children, ...rest }: SelectHTMLAttribut
 /* ── Card / Badge ── */
 export function Card({ className = "", children }: { className?: string; children: ReactNode }) {
   return (
-    <div className={`rounded-2xl border border-ink/8 bg-cream-soft shadow-sm shadow-earth/5 ${className}`}>
+    <div className={`rounded-3xl border border-line bg-surface shadow-card ${className}`}>
       {children}
     </div>
   );
@@ -92,14 +93,14 @@ export function Badge({
   children: ReactNode;
 }) {
   const tones = {
-    neutral: "bg-ink/8 text-ink/70",
-    success: "bg-leaf/15 text-leaf",
-    warning: "bg-orange-glow/25 text-orange-deep",
-    danger: "bg-[#b3362b]/12 text-[#b3362b]",
-    orange: "bg-orange/12 text-orange-deep",
+    neutral: "bg-surface-2 text-muted",
+    success: "bg-action/12 text-action",
+    warning: "bg-orange-glow/25 text-brand-deep",
+    danger: "bg-danger/12 text-danger",
+    orange: "bg-brand/12 text-brand-deep",
   };
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${tones[tone]}`}>
+    <span className={`inline-flex items-center rounded-lg px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${tones[tone]}`}>
       {children}
     </span>
   );
@@ -116,16 +117,16 @@ export function statusTone(status: string): "neutral" | "success" | "warning" | 
 
 /* ── Skeleton / Spinner / Empty ── */
 export function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-xl bg-ink/8 ${className}`} />;
+  return <div className={`animate-pulse rounded-xl bg-surface-2 ${className}`} />;
 }
 
 export function Spinner({ className = "h-6 w-6" }: { className?: string }) {
-  return <Loader2 className={`${className} animate-spin text-orange`} />;
+  return <Loader2 className={`${className} animate-spin text-brand`} />;
 }
 
 export function EmptyState({ title, sub, action }: { title: string; sub?: string; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-ink/15 px-8 py-16 text-center">
+    <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-line bg-surface-2/50 px-8 py-16 text-center">
       <p className="display text-xl font-semibold text-ink/80">{title}</p>
       {sub && <p className="max-w-sm text-sm text-ink/55">{sub}</p>}
       {action}
@@ -164,7 +165,7 @@ export function Dialog({
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div
         data-lenis-prevent
-        className={`relative max-h-[88vh] w-full ${wide ? "max-w-3xl" : "max-w-lg"} overflow-y-auto rounded-2xl border border-ink/10 bg-cream p-6 shadow-2xl`}
+        className={`relative max-h-[88vh] w-full ${wide ? "max-w-3xl" : "max-w-lg"} overflow-y-auto rounded-3xl border border-line bg-surface p-6 shadow-2xl`}
       >
         <div className="mb-5 flex items-center justify-between">
           <h3 className="display text-xl font-bold text-ink">{title}</h3>
@@ -192,15 +193,15 @@ export function QtyStepper({
   max?: number;
   small?: boolean;
 }) {
-  const btn = `flex items-center justify-center rounded-lg border border-ink/15 text-ink/70 transition hover:border-orange hover:text-orange-deep disabled:opacity-40 ${small ? "h-7 w-7" : "h-9 w-9"}`;
+  const btn = `flex items-center justify-center rounded-lg text-action transition hover:bg-action/10 disabled:opacity-35 ${small ? "h-7 w-7" : "h-9 w-9"}`;
   return (
     <div className="inline-flex items-center gap-2">
       <button className={btn} disabled={value <= min} onClick={() => onChange(value - 1)} aria-label="Decrease">
-        <Minus className="h-3.5 w-3.5" />
+        <Minus className="h-4 w-4" strokeWidth={3} />
       </button>
-      <span className={`display text-center font-bold text-ink ${small ? "w-6 text-sm" : "w-8"}`}>{value}</span>
+      <span className={`display text-center font-extrabold text-action ${small ? "w-6 text-sm" : "w-8"}`}>{value}</span>
       <button className={btn} disabled={value >= max} onClick={() => onChange(value + 1)} aria-label="Increase">
-        <Plus className="h-3.5 w-3.5" />
+        <Plus className="h-4 w-4" strokeWidth={3} />
       </button>
     </div>
   );
@@ -219,7 +220,7 @@ export function Stars({ value, onChange, size = "h-4 w-4" }: { value: number; on
           className={onChange ? "cursor-pointer" : "cursor-default"}
           aria-label={`${n} star`}
         >
-          <Star className={`${size} ${n <= value ? "fill-orange text-orange" : "text-ink/25"}`} />
+          <Star className={`${size} ${n <= value ? "fill-brand text-brand" : "text-ink/25"}`} />
         </button>
       ))}
     </div>
