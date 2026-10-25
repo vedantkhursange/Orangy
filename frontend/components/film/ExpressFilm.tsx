@@ -5,7 +5,8 @@ import type * as THREE_ from "three";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { ArrowDown } from "lucide-react";
+import Link from "next/link";
+import { ArrowDown, ShoppingBag } from "lucide-react";
 import { EXPRESS, shots } from "@/data/express";
 import { hero, brand } from "@/data/site";
 
@@ -315,14 +316,14 @@ export default function ExpressFilm() {
           <div
             key={s.id}
             aria-hidden={!on}
-            className="pointer-events-none absolute left-8 top-[58%] max-w-md px-0 transition-all duration-500 md:left-[8vw] md:top-1/2 md:-translate-y-1/2"
+            className="pointer-events-none absolute inset-x-4 bottom-24 max-w-md rounded-3xl bg-black/45 px-6 py-5 backdrop-blur-md transition-all duration-500 md:inset-x-auto md:bottom-auto md:left-[8vw] md:top-1/2 md:-translate-y-1/2"
             style={{
               opacity: on ? 1 : 0,
               transform: `translateY(${on ? 0 : 24}px)`,
             }}
           >
             <h2
-              className="display text-3xl font-semibold leading-tight text-white md:text-5xl"
+              className="display text-2xl font-extrabold leading-tight text-white md:text-4xl"
               style={{ textShadow: "0 2px 24px rgba(12,6,20,0.6)" }}
             >
               {s.title}
@@ -373,12 +374,16 @@ export default function ExpressFilm() {
 
 function HeroOverlay({ staticMode = false }: { staticMode?: boolean }) {
   return (
-    <div className="absolute inset-0 flex flex-col items-start justify-center px-8 md:px-[8vw]">
-      <p className="mb-4 text-xs font-medium uppercase tracking-[0.35em] text-white/80 md:text-sm">
+    <div className="absolute inset-0 flex flex-col items-start justify-end px-6 pb-28 md:justify-center md:px-[8vw] md:pb-0">
+      {/* legibility scrim: bottom-up on phones, left-to-right on desktop, so
+          the headline never sits directly on the busy diorama */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0d0716] via-[#0d0716]/75 to-transparent md:bg-gradient-to-r md:from-[#0d0716]/90 md:via-[#0d0716]/45 md:via-45% md:to-transparent md:to-70%" />
+      <p className="relative mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.25em] text-white/90 backdrop-blur md:text-xs">
+        <span className="h-1.5 w-1.5 rounded-full bg-brand" />
         {hero.kicker}
       </p>
       <h1
-        className="display text-5xl font-bold leading-[1.02] text-white md:text-7xl lg:text-8xl"
+        className="display relative text-[44px] font-extrabold leading-[1.02] tracking-tight text-white md:text-7xl lg:text-8xl"
         style={{ textShadow: "0 4px 40px rgba(12,6,20,0.6)" }}
       >
         {hero.headline[0]}
@@ -386,11 +391,18 @@ function HeroOverlay({ staticMode = false }: { staticMode?: boolean }) {
         <span className="text-orange-glow">{hero.headline[1]}</span>
       </h1>
       <p
-        className="mt-6 max-w-md text-base text-white/85 md:text-lg"
+        className="relative mt-5 max-w-md text-base text-white/85 md:mt-6 md:text-lg"
         style={{ textShadow: "0 2px 16px rgba(12,6,20,0.5)" }}
       >
         {hero.sub}
       </p>
+      <div className="relative mt-8 flex flex-wrap items-center gap-3 md:mt-10">
+      <Link
+        href="/products"
+        className="inline-flex items-center gap-2 rounded-2xl bg-brand px-7 py-3.5 text-sm font-extrabold text-white shadow-[0_12px_28px_-10px] shadow-brand transition hover:brightness-95 active:scale-[0.98]"
+      >
+        <ShoppingBag className="h-4 w-4" /> Shop now
+      </Link>
       <a
         href={staticMode ? "#products" : "#experience"}
         onClick={(e) => {
@@ -398,14 +410,15 @@ function HeroOverlay({ staticMode = false }: { staticMode?: boolean }) {
           e.preventDefault();
           window.scrollTo({ top: window.innerHeight * 1.2, behavior: "smooth" });
         }}
-        className="group mt-10 inline-flex items-center gap-3 rounded-full bg-orange px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-orange/30 transition hover:bg-orange-deep"
+        className="group inline-flex items-center gap-2 rounded-2xl border-2 border-white/25 bg-white/5 px-6 py-3 text-sm font-bold text-white backdrop-blur transition hover:border-white/60"
       >
         {hero.cta}
         <ArrowDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
       </a>
+      </div>
 
       {!staticMode && (
-        <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 text-white/70">
+        <div className="absolute bottom-8 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-white/70 md:flex">
           <span className="text-[11px] uppercase tracking-[0.3em]">{hero.scrollHint}</span>
           <span className="block h-8 w-px animate-pulse bg-white/60" />
         </div>

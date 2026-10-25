@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import Reveal from "@/components/animations/Reveal";
 import { story } from "@/data/site";
 import type { MediaAsset } from "@/lib/types";
+import { cdn, cdnVideo, videoPoster } from "@/lib/media";
 
 const SLIDE_MS = 4500;
 
@@ -95,10 +96,11 @@ function StorySlideshow({ slides }: { slides: MediaAsset[] }) {
           >
             {slide.type === "IMAGE" ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={slide.url} alt={slide.altText ?? ""} className="h-full w-full object-cover" />
+              <img src={cdn(slide.url, 1400)} alt={slide.altText ?? ""} loading="lazy" className="h-full w-full object-cover" />
             ) : (
               <video
-                src={slide.url}
+                src={cdnVideo(slide.url)}
+                poster={videoPoster(slide.url, 1280)}
                 className="h-full w-full object-cover"
                 autoPlay={active}
                 muted

@@ -1,47 +1,76 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────
-   ORANGY design tokens
-   Warm, premium, natural. Orange is the accent,
-   cream is the canvas, dusk is the dark stage.
+   ORANGE EXPRESS design tokens — 2026 refresh
+   Food-delivery-app clarity (Swiggy / Zepto / Flipkart): a white canvas, one
+   loud brand orange used for brand moments, a separate green for "add",
+   "in stock" and "offer" signals, near-black ink and soft grey surfaces.
+   The legacy names (cream, sand, ink, orange…) are kept and remapped so every
+   existing screen picks up the new palette without a rewrite.
    ───────────────────────────────────────────── */
 :root {
-  --cream: #fff8ef;
-  --cream-soft: #fffcf7;
-  --sand: #f6ead9;
-  --orange: #f4771f;
-  --orange-deep: #d95f04;
-  --orange-glow: #ffb25e;
-  --peel: #ff8c33;
-  --leaf: #3e6b3a;
-  --leaf-deep: #2f5233;
-  --earth: #6b4f3a;
-  --ink: #2b2018;
-  --dusk: #1c1208;
-  --dusk-2: #291a0c;
-  /* Always-light text for the always-dark "stage" sections (dusk/dusk-2
-     backgrounds) — unlike --cream, this never inverts, since those
-     sections stay dark in both themes. */
-  --cream-fixed: #fff8ef;
-  --cream-fixed-soft: #fffcf7;
+  /* new semantic tokens */
+  --brand: #fc7419;
+  --brand-deep: #c84f05; /* brand-coloured text on white, 4.8:1 */
+  --action: #12873f;
+  --action-deep: #0b6b31;
+  --surface: #ffffff;
+  --surface-2: #f4f4f6;
+  --line: #e7e7ec;
+  --muted: #62656f;
+  --danger: #d0312d;
+
+  /* legacy names, remapped */
+  --cream: #ffffff;
+  --cream-soft: #ffffff;
+  --sand: #f4f4f6;
+  --orange: var(--brand);
+  --orange-deep: var(--brand-deep);
+  --orange-glow: #ffb26b;
+  --peel: #ff9447;
+  --leaf: var(--action);
+  --leaf-deep: var(--action-deep);
+  --earth: #62656f;
+  --ink: #1a1b20;
+  --dusk: #14111b;
+  --dusk-2: #1c1725;
+  /* Always-light text for the always-dark "stage" sections */
+  --cream-fixed: #ffffff;
+  --cream-fixed-soft: #fafafa;
 }
 
-/* Dark mode flips the semantic tokens; orange accents stay identical. */
+/* Dark mode flips the semantic tokens; the brand orange stays identical. */
 .dark {
-  --cream: #16110c;
-  --cream-soft: #1c1610;
-  --sand: #241c14;
-  --orange-deep: #ff9440;
-  --leaf: #6da367;
-  --earth: #c4a88f;
-  --ink: #f2e9dd;
-  --dusk: #0e0a06;
-  --dusk-2: #171006;
+  --brand-deep: #ff9a4d;
+  --action: #2fb565;
+  --action-deep: #23a055;
+  --surface: #121216;
+  --surface-2: #1b1b21;
+  --line: #2b2b33;
+  --muted: #a3a6b1;
+  --danger: #f26b66;
+
+  --cream: #0d0d10;
+  --cream-soft: #141418;
+  --sand: #1b1b21;
+  --earth: #a3a6b1;
+  --ink: #f3f3f6;
+  --dusk: #09080c;
+  --dusk-2: #121019;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
+  --color-action: var(--action);
+  --color-action-deep: var(--action-deep);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-muted: var(--muted);
+  --color-danger: var(--danger);
   --color-cream: var(--cream);
   --color-cream-soft: var(--cream-soft);
   --color-sand: var(--sand);
@@ -57,8 +86,32 @@
   --color-dusk-2: var(--dusk-2);
   --color-cream-fixed: var(--cream-fixed);
   --color-cream-fixed-soft: var(--cream-fixed-soft);
+  --shadow-card: 0 8px 28px -12px rgb(20 20 30 / 0.18), 0 2px 6px -2px rgb(20 20 30 / 0.06);
+  --shadow-lift: 0 18px 40px -16px rgb(20 20 30 / 0.28);
   --font-display: var(--font-outfit);
   --font-sans: var(--font-inter);
+}
+
+/* ── Patterns & shapes ──
+   Playful geometry in the food-app idiom: dotted grids, soft citrus glows and
+   a wavy section edge. Pure CSS, no images. */
+.pattern-dots {
+  background-image: radial-gradient(color-mix(in srgb, var(--brand) 22%, transparent) 1.2px, transparent 1.4px);
+  background-size: 18px 18px;
+}
+.pattern-dots-light {
+  background-image: radial-gradient(rgb(255 255 255 / 0.12) 1.2px, transparent 1.4px);
+  background-size: 18px 18px;
+}
+.wave-top {
+  -webkit-mask: radial-gradient(28px at 50% 0, #0000 98%, #000) 50% / 56px 100%;
+  mask: radial-gradient(28px at 50% 0, #0000 98%, #000) 50% / 56px 100%;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 html {
@@ -73,8 +126,13 @@ body {
 }
 
 ::selection {
-  background: var(--orange);
-  color: var(--cream-soft);
+  background: var(--brand);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
 }
 
 /* Display type helper */
@@ -194,5 +252,8 @@ body {
   .bubble,
   .ray-turn {
     animation: none !important;
+  }
+  html {
+    scroll-behavior: auto;
   }
 }

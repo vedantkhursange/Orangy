@@ -7,6 +7,7 @@ import type { MediaAsset } from "@/lib/types";
 import { useToast } from "@/components/providers/Providers";
 import MediaUploader from "@/components/admin/MediaUploader";
 import { EmptyState, Skeleton } from "@/components/ui/ui";
+import { cdn } from "@/lib/media";
 
 /**
  * Shared admin CRUD for an ordered, ref-type-scoped media collection —
@@ -88,7 +89,7 @@ export default function MediaCollectionManager({
             <div key={m.id} className="group relative aspect-square overflow-hidden rounded-xl bg-sand">
               {m.type === "IMAGE" ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={m.url} alt={m.altText ?? ""} className="h-full w-full object-cover" />
+                <img src={cdn(m.url, 300)} alt={m.altText ?? ""} className="h-full w-full object-cover" />
               ) : (
                 <video src={m.url} className="h-full w-full object-cover" muted playsInline />
               )}

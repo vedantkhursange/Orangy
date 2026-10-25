@@ -9,6 +9,7 @@ import { useToast } from "@/components/providers/Providers";
 import ImageUploadField from "@/components/admin/ImageUploadField";
 import MediaUploader from "@/components/admin/MediaUploader";
 import { Badge, Button, Card, Dialog, EmptyState, Input, Label, Pagination, Select, Skeleton, Textarea } from "@/components/ui/ui";
+import { cdn } from "@/lib/media";
 
 /* ─────────────────────── page ─────────────────────── */
 
@@ -68,7 +69,7 @@ export default function AdminProductsPage() {
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-sand">
                           {p.thumbnailUrl ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={p.thumbnailUrl} alt="" className="h-full w-full object-cover" />
+                            <img src={cdn(p.thumbnailUrl, 200)} alt="" className="h-full w-full object-cover" />
                           ) : (
                             <Leaf className="h-5 w-5 text-orange/40" />
                           )}
@@ -396,7 +397,7 @@ function MediaManager({ productId }: { productId: string }) {
             <div key={m.id} className="group relative aspect-square overflow-hidden rounded-xl bg-sand">
               {m.type === "IMAGE" ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={m.url} alt={m.altText ?? ""} className="h-full w-full object-cover" />
+                <img src={cdn(m.url, 300)} alt={m.altText ?? ""} className="h-full w-full object-cover" />
               ) : (
                 <video src={m.url} className="h-full w-full object-cover" muted />
               )}

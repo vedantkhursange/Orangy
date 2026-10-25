@@ -1,14 +1,28 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Expand, Play } from "lucide-react";
 import { api } from "@/lib/api";
+import { cdn, cdnVideo, videoPoster } from "@/lib/media";
 import Reveal from "@/components/animations/Reveal";
+import MediaViewer, { type ViewerItem } from "@/components/media/MediaViewer";
 import type { MediaAsset } from "@/lib/types";
 
-/** Admin-managed gallery grid — images and videos, same cell size. A video
- *  plays inline, muted, only while its tile is scrolled into view. */
+/** Bento layout: every sixth tile is a 2×2 feature, every sixth+3 is tall. */
+function span(i: number) {
+  if (i % 6 === 0) return "col-span-2 row-span-2";
+  if (i % 6 === 3) return "row-span-2";
+  return "";
+}
+
+/**
+ * Admin-managed gallery — images and videos in a bento grid. Every tile opens
+ * the shared full-screen viewer: images zoom, videos play with sound and
+ * controls. Videos also preview silently in the tile while scrolled into view.
+ */
 export default function Gallery() {
+  const [open, setOpen] = useState<number | null>(null);
   const { data } = useQuery({
     queryKey: ["media", "gallery"],
     queryFn: () => api.get<MediaAsset[]>("/api/media/gallery"),
@@ -17,61 +31,81 @@ export default function Gallery() {
 
   if (items.length === 0) return null;
 
+  const viewerItems: ViewerItem[] = items.map((m, i) => ({
+    type: m.type,
+    url: m.url,
+    alt: m.altText || `Orchard ${m.type === "VIDEO" ? "video" : "photo"} ${i + 1}`,
+  }));
+
   return (
-    <section id="gallery" className="bg-dusk-2 py-24 md:py-36 grain relative overflow-hidden">
-      <div className="mx-auto max-w-7xl px-6 md:px-10">
+    <section id="gallery" className="grain relative overflow-hidden bg-dusk-2 py-20 md:py-32">
+      <div className="pattern-dots-light absolute inset-0 opacity-60" />
+      <div className="pointer-events-none absolute -left-40 top-0 h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,rgb(252_116_25/0.22),transparent_65%)]" />
+      <div className="relative mx-auto max-w-7xl px-5 md:px-10">
         <Reveal>
-          <p data-reveal className="text-xs font-semibold uppercase tracking-[0.35em] text-orange-glow">
+          <p data-reveal className="text-xs font-extrabold uppercase tracking-[0.25em] text-orange-glow">
             The Orchard, Up Close
           </p>
-          <h2 data-reveal className="display mt-4 max-w-2xl text-4xl font-bold leading-tight text-cream-fixed-soft md:text-5xl">
+          <h2 data-reveal className="display mt-3 max-w-2xl text-3xl font-extrabold leading-tight text-cream-fixed md:text-5xl">
             A day in golden light.
           </h2>
+          <p data-reveal className="mt-3 text-sm text-white/60">Tap any photo or video to open it.</p>
         </Reveal>
 
-        <Reveal stagger={0.08} className="mt-14">
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3">
-            {items.map((item) =>
-              item.type === "IMAGE" ? (
-                <GalleryImageTile key={item.id} item={item} />
-              ) : (
-                <GalleryVideoTile key={item.id} item={item} />
-              ),
-            )}
+        <Reveal stagger={0.06} className="mt-10 md:mt-14">
+          <div className="grid grid-flow-dense auto-rows-[150px] grid-cols-2 gap-3 sm:auto-rows-[190px] md:grid-cols-4 md:gap-5 lg:auto-rows-[220px]">
+            {items.map((item, i) => (
+              <button
+                key={item.id}
+                data-reveal
+                onClick={() => setOpen(i)}
+                aria-label={`Open ${viewerItems[i].alt}`}
+                className={`group relative overflow-hidden rounded-3xl bg-black/40 text-left ring-white/0 transition hover:ring-4 hover:ring-white/15 focus-visible:ring-4 focus-visible:ring-brand ${span(i)}`}
+              >
+                {item.type === "IMAGE" ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={cdn(item.url, span(i).includes("col-span-2") ? 1100 : 600)}
+                    alt={viewerItems[i].alt}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.06]"
+                  />
+                ) : (
+                  <GalleryVideo url={item.url} />
+                )}
+                <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition group-hover:opacity-100" />
+                {item.type === "VIDEO" ? (
+                  <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 shadow-xl transition group-hover:scale-110">
+                      <Play className="ml-0.5 h-6 w-6 fill-brand text-brand" />
+                    </span>
+                  </span>
+                ) : (
+                  <span className="pointer-events-none absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-ink opacity-0 shadow-lg transition group-hover:opacity-100">
+                    <Expand className="h-4 w-4" />
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
         </Reveal>
       </div>
+
+      {open !== null && (
+        <MediaViewer items={viewerItems} index={open} onIndexChange={setOpen} onClose={() => setOpen(null)} />
+      )}
     </section>
   );
 }
 
-function GalleryImageTile({ item }: { item: MediaAsset }) {
-  return (
-    <figure data-reveal className="group relative overflow-hidden rounded-3xl" style={{ aspectRatio: "4/5" }}>
-      {/* Cloudinary URLs — next/image needs the host allow-listed via
-          images.remotePatterns, which isn't configured; the rest of the
-          codebase already uses a plain <img> for the same reason. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={item.url}
-        alt={item.altText ?? ""}
-        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
-      />
-    </figure>
-  );
-}
-
-/** Plays muted + inline once >=50% visible, pauses the instant it isn't —
- *  the "small grid tile that comes alive on scroll" behaviour that was asked
- *  for. Not the browser's native Picture-in-Picture (which pops the video
- *  into its own floating window) — that would fight the grid layout rather
- *  than sit inside it. */
-function GalleryVideoTile({ item }: { item: MediaAsset }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
+/** Silent preview that plays only while ≥50% visible; poster frame until then. */
+function GalleryVideo({ url }: { url: string }) {
+  const ref = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    const video = videoRef.current;
+    const video = ref.current;
     if (!video) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) video.play().catch(() => {});
@@ -84,19 +118,16 @@ function GalleryVideoTile({ item }: { item: MediaAsset }) {
   }, []);
 
   return (
-    <figure className="group relative overflow-hidden rounded-3xl bg-black" style={{ aspectRatio: "4/5" }}>
-      <video
-        ref={videoRef}
-        src={item.url}
-        className="h-full w-full object-cover"
-        muted
-        loop
-        playsInline
-        preload="metadata"
-      />
-      <span className="pointer-events-none absolute right-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
-        Video
-      </span>
-    </figure>
+    <video
+      ref={ref}
+      src={cdnVideo(url, 720)}
+      poster={videoPoster(url, 720)}
+      className="h-full w-full object-cover"
+      muted
+      loop
+      playsInline
+      preload="none"
+      tabIndex={-1}
+    />
   );
 }

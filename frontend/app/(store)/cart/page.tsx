@@ -8,6 +8,7 @@ import { api, inr } from "@/lib/api";
 import type { Cart } from "@/lib/types";
 import { useAuth, useCart, useToast } from "@/components/providers/Providers";
 import { Button, Card, EmptyState, QtyStepper, Spinner } from "@/components/ui/ui";
+import { cdn } from "@/lib/media";
 
 export default function CartPage() {
   const { user, loading } = useAuth();
@@ -80,7 +81,7 @@ export default function CartPage() {
                 <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-sand">
                   {item.thumbnailUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.thumbnailUrl} alt={item.productName} className="h-full w-full object-cover" />
+                    <img src={cdn(item.thumbnailUrl, 200)} alt={item.productName} className="h-full w-full object-cover" />
                   ) : (
                     <Leaf className="h-8 w-8 text-orange/40" />
                   )}
