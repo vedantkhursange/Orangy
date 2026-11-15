@@ -31,10 +31,10 @@ export default function BottomNav() {
 
   return (
     <>
-      <div className="h-16 md:hidden" aria-hidden />
+      <div className="h-16 md:hidden print:hidden" aria-hidden />
       <nav
         aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-black/70 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl backdrop-saturate-150 md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-black/70 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl backdrop-saturate-150 md:hidden print:hidden"
       >
         <ul className="grid grid-cols-4">
           {tabs.map(({ href, label, icon: Icon, active, badge }) => (

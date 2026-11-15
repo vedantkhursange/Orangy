@@ -40,57 +40,57 @@ export default async function GiftCardPage() {
       </div>
 
       {/* ── FRONT ── */}
-      <section className="gift-card relative overflow-hidden text-white" aria-label="Card front">
-        <div className="absolute inset-0 bg-[#060607]" />
-        <div className="absolute -left-[20%] top-[-30%] h-[130%] w-[75%] rounded-full bg-[radial-gradient(circle,rgba(255,122,26,0.42),transparent_62%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(115deg,transparent_55%,rgba(255,255,255,0.05)_56%,transparent_75%)]" />
+      <section className="gift-card relative overflow-hidden bg-black text-white" aria-label="Card front">
+        <CardGrid />
+        <div className="gift-frame" />
 
-        <div className="relative grid h-full grid-cols-[1.25fr_1fr]">
-          <div className="relative flex flex-col justify-between p-[6mm]">
+        <div className="relative grid h-full grid-cols-[1.35fr_1fr]">
+          <div className="relative flex flex-col justify-between p-[9mm]">
             <div className="flex items-center gap-[2mm]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-mark.svg" alt="" className="h-[7mm] w-[7mm] rounded-[1.6mm]" />
-              <span className="display text-[4.2mm] font-bold tracking-[0.16em]">{brand.name}</span>
+              <img src="/logo-mark.svg" alt="" className="h-[5.5mm] w-[5.5mm] rounded-[1.2mm]" />
+              <span className="display text-[3.1mm] font-semibold tracking-[0.32em]">{brand.name.toUpperCase()}</span>
             </div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/orange-3d.png" alt="Fresh oranges" className="absolute left-[2mm] top-[17mm] w-[78mm] drop-shadow-[0_6mm_8mm_rgba(255,122,26,0.35)]" />
+            <img src="/images/orange-3d.png" alt="Fresh oranges" className="absolute left-[11mm] top-[21mm] w-[58mm]" />
             <div className="relative">
-              <p className="display text-[5.6mm] font-bold leading-[1.05]">
+              <p className="display text-[6.4mm] font-bold leading-[1.05] tracking-[-0.01em]">
                 Born under the sun.
                 <br />
-                <span className="text-gradient">Picked for you.</span>
+                <span className="text-orange">Picked for you.</span>
               </p>
-              <p className="mt-[1.5mm] text-[2.5mm] uppercase tracking-[0.3em] text-white/55">Ambia bahar · 2026 harvest</p>
+              <p className="mt-[2.2mm] text-[2.1mm] uppercase tracking-[0.42em] text-white/45">Ambia bahar · 2026 harvest</p>
             </div>
           </div>
 
-          <div className="flex flex-col items-center justify-center gap-[3mm] border-l border-white/10 bg-white/[0.04] p-[6mm]">
-            <div className="rounded-[3mm] bg-white p-[3mm] shadow-[0_0_0_0.5mm_rgba(255,122,26,0.6),0_4mm_10mm_rgba(255,122,26,0.25)]">
-              <div className="h-[34mm] w-[34mm] [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: qr }} />
+          <div className="relative flex flex-col items-center justify-center gap-[4.5mm] p-[9mm]">
+            <span className="absolute bottom-[14mm] left-0 top-[14mm] w-px bg-white/12" />
+            <p className="whitespace-nowrap text-center text-[2.1mm] uppercase tracking-[0.3em] text-white/45">Tell us how they taste</p>
+            <div className="rounded-[2.5mm] bg-white p-[2.6mm]">
+              <div className="h-[33mm] w-[33mm] [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: qr }} />
             </div>
             <div className="text-center">
-              <p className="display text-[3.6mm] font-bold">Scan &amp; rate your oranges</p>
-              <p className="mt-[0.8mm] text-[2.4mm] text-white/60">Stars, a photo, two lines. No sign-up.</p>
+              <p className="display text-[3.5mm] font-semibold">Scan to leave a review</p>
+              <p className="mt-[1mm] text-[2.3mm] text-white/50">Stars, a photo, two lines. No sign-up.</p>
             </div>
-            <p className="text-[2.6mm] font-semibold tracking-[0.12em] text-orange">{contact.website}</p>
           </div>
         </div>
       </section>
 
       {/* ── BACK ── */}
-      <section className="gift-card relative overflow-hidden text-white" aria-label="Card back">
-        <div className="absolute inset-0 bg-[#060607]" />
-        <div className="absolute -right-[15%] bottom-[-40%] h-[120%] w-[70%] rounded-full bg-[radial-gradient(circle,rgba(255,122,26,0.3),transparent_62%)]" />
+      <section className="gift-card relative overflow-hidden bg-black text-white" aria-label="Card back">
+        <CardGrid />
+        <div className="gift-frame" />
 
-        <div className="relative grid h-full grid-cols-[1.2fr_1fr] gap-[4mm] p-[7mm]">
-          <div className="flex flex-col justify-between">
+        <div className="relative grid h-full grid-cols-[1.35fr_1fr] p-[9mm]">
+          <div className="flex flex-col justify-between pr-[6mm]">
             <div>
-              <p className="text-[2.4mm] uppercase tracking-[0.3em] text-orange">A gift from our grove</p>
-              <p className="display mt-[2mm] text-[5mm] font-bold leading-[1.15]">
+              <p className="text-[2.1mm] uppercase tracking-[0.42em] text-orange">A gift from our grove</p>
+              <p className="display mt-[3mm] text-[5.4mm] font-bold leading-[1.14] tracking-[-0.01em]">
                 Grown, picked and packed by our family, for yours.
               </p>
             </div>
-            <ul className="space-y-[1.8mm] text-[2.9mm] text-white/80">
+            <ul className="space-y-[2mm] border-t border-white/12 pt-[4mm] text-[2.7mm] text-white/70">
               <Row icon="pin">
                 <span className="font-semibold text-white">{contact.farm}</span>
                 <br />
@@ -98,25 +98,31 @@ export default async function GiftCardPage() {
               </Row>
               <Row icon="phone">{contact.phone || "+91 ····· ·····"}</Row>
               {contact.email && <Row icon="mail">{contact.email}</Row>}
-              <Row icon="globe">{contact.website}</Row>
+              <Row icon="globe">
+                <span className="font-semibold text-white">{contact.website}</span>
+              </Row>
             </ul>
-            <div className="flex items-center gap-[2mm]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-mark.svg" alt="" className="h-[6mm] w-[6mm] rounded-[1.3mm]" />
-              <span className="display text-[3.2mm] font-bold tracking-[0.16em]">{brand.name}</span>
-            </div>
           </div>
 
-          <div className="flex flex-col items-center justify-center rounded-[4mm] border border-white/12 bg-white/[0.05] p-[3mm]">
+          <div className="relative flex flex-col items-center justify-center">
+            <span className="absolute bottom-[5mm] left-0 top-[5mm] w-px bg-white/12" />
             <Globe />
-            <p className="mt-[2mm] text-center text-[2.6mm] font-semibold">Pandhurna, Madhya Pradesh</p>
-            <p className="text-center text-[2.2mm] text-white/55">
-              {FARM.lat.toFixed(2)}° N · {FARM.lon.toFixed(2)}° E
+            <p className="mt-[3mm] text-center text-[2.1mm] uppercase tracking-[0.36em] text-white/80">Pandhurna · India</p>
+            <p className="mt-[1mm] text-center text-[2mm] tracking-[0.12em] text-white/40">
+              {FARM.lat.toFixed(2)}° N &nbsp; {FARM.lon.toFixed(2)}° E
             </p>
-            <p className="mt-[0.5mm] text-center text-[2mm] text-white/40">Plus Code {contact.plusCode.split(" ")[0]}</p>
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+/** The site's perspective grid, as a quiet floor along the bottom of the card. */
+function CardGrid() {
+  return (
+    <div className="gift-grid" aria-hidden>
+      <div />
     </div>
   );
 }
@@ -130,7 +136,7 @@ function Row({ icon, children }: { icon: "pin" | "phone" | "mail" | "globe"; chi
   }[icon];
   return (
     <li className="flex gap-[2mm]">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#ff7a1a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-[0.3mm] h-[3.4mm] w-[3.4mm] shrink-0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mt-[0.4mm] h-[3mm] w-[3mm] shrink-0">
         <path d={d} />
       </svg>
       <span>{children}</span>
@@ -170,21 +176,13 @@ function Globe() {
   const pin = project(FARM.lat, FARM.lon);
 
   return (
-    <svg viewBox="0 0 100 100" className="h-[38mm] w-[38mm]" aria-label="Globe with a pin on Pandhurna, India">
-      <defs>
-        <radialGradient id="gl" cx="38%" cy="32%" r="75%">
-          <stop offset="0" stopColor="#2a1a10" />
-          <stop offset="1" stopColor="#0b0b0d" />
-        </radialGradient>
-      </defs>
-      <circle cx="50" cy="50" r={R + 3} fill="rgba(255,122,26,0.12)" />
-      <circle cx="50" cy="50" r={R} fill="url(#gl)" stroke="rgba(255,255,255,0.25)" strokeWidth="0.4" />
+    <svg viewBox="0 0 100 100" className="h-[36mm] w-[36mm]" aria-label="Globe with a pin on Pandhurna, India">
+      <circle cx="50" cy="50" r={R} fill="#050505" stroke="rgba(255,255,255,0.3)" strokeWidth="0.35" />
       {paths.map((d, i) => (
-        <path key={i} d={d} fill="none" stroke="rgba(255,255,255,0.16)" strokeWidth="0.3" />
+        <path key={i} d={d} fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="0.25" />
       ))}
-      <circle cx={pin.x} cy={pin.y} r="7" fill="rgba(255,122,26,0.18)" />
-      <circle cx={pin.x} cy={pin.y} r="4" fill="rgba(255,122,26,0.35)" />
-      <circle cx={pin.x} cy={pin.y} r="1.8" fill="#ff7a1a" stroke="#fff" strokeWidth="0.5" />
+      <circle cx={pin.x} cy={pin.y} r="5" fill="none" stroke="rgba(255,122,26,0.55)" strokeWidth="0.35" />
+      <circle cx={pin.x} cy={pin.y} r="1.6" fill="#ff7a1a" />
     </svg>
   );
 }

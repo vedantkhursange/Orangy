@@ -273,6 +273,36 @@ body {
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
+/* hairline frame, inset from the trim edge */
+.gift-frame {
+  position: absolute;
+  inset: 4mm;
+  border: 0.2mm solid rgb(255 255 255 / 0.14);
+  border-radius: 2mm;
+  pointer-events: none;
+}
+/* perspective grid floor */
+.gift-grid {
+  position: absolute;
+  inset: 0;
+  perspective: 60mm;
+  overflow: hidden;
+}
+.gift-grid > div {
+  position: absolute;
+  left: -60%;
+  right: -60%;
+  bottom: 0;
+  height: 62mm;
+  transform-origin: 50% 100%;
+  transform: rotateX(66deg);
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.2) 0.2mm, transparent 0.2mm),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.2) 0.2mm, transparent 0.2mm);
+  background-size: 7mm 7mm;
+  mask-image: linear-gradient(to top, #000 0%, transparent 80%);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 80%);
+}
 @media print {
   @page {
     size: 148mm 105mm;
@@ -280,7 +310,7 @@ body {
   }
   html,
   body {
-    background: #060607 !important;
+    background: #000 !important;
   }
   .gift-sheet {
     padding: 0 !important;
@@ -290,6 +320,9 @@ body {
     border-radius: 0;
     box-shadow: none;
     break-after: page;
+  }
+  .gift-card:last-of-type {
+    break-after: auto;
   }
 }
 
