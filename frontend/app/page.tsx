@@ -13,7 +13,7 @@ export default function Home() {
   return (
     <>
       <OrangeStage />
-      <main id="main" className="relative z-10">
+      <main id="main" className="relative">
         <Navbar />
         <Hero />
         <Manifesto />

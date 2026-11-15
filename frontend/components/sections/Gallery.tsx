@@ -38,9 +38,7 @@ export default function Gallery() {
   }));
 
   return (
-    <section id="gallery" className="relative overflow-hidden py-20 md:py-32">
-      <div className="pattern-dots-light absolute inset-0 opacity-60" />
-      <div className="pointer-events-none absolute -left-40 top-0 h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,rgb(252_116_25/0.22),transparent_65%)]" />
+    <section id="gallery" data-orange="right" data-scale="0.75" className="relative overflow-hidden py-20 md:py-32">
       <div className="relative mx-auto max-w-7xl px-5 md:px-10">
         <Reveal>
           <p data-reveal className="text-xs font-extrabold uppercase tracking-[0.25em] text-orange-glow">
