@@ -1,37 +1,23 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 /**
- * Atmosphere behind everything: slow-moving warm light, a soft spotlight that
- * follows the 3D model (position fed by <OrangeStage/> through CSS variables),
- * floating bokeh with scroll parallax, a vignette and film grain. Pure CSS,
- * so it costs almost nothing to render.
+ * Pure black backdrop with a faint perspective grid (floor and ceiling) that
+ * drifts with scroll, to give the page a sense of 3D space. One element, one
+ * transform: nothing here repaints while scrolling.
  */
-const BOKEH = Array.from({ length: 22 }, (_, i) => {
-  // deterministic pseudo-random so server and client markup match
-  const r = (n: number) => {
-    const x = Math.sin(i * 12.9898 + n * 78.233) * 43758.5453;
-    return x - Math.floor(x);
-  };
-  return {
-    left: `${(r(1) * 100).toFixed(2)}%`,
-    top: `${(r(2) * 100).toFixed(2)}%`,
-    size: 4 + r(3) * 22,
-    depth: 0.15 + r(4) * 0.85,
-    dur: 14 + r(5) * 18,
-    delay: -r(6) * 20,
-    warm: r(7) > 0.35,
-  };
-});
-
 export default function AmbientBackground() {
+  const ref = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const root = document.documentElement;
+    const el = ref.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let raf = 0;
     const onScroll = () => {
       cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => root.style.setProperty("--oe-scroll", String(window.scrollY)));
+      // the grid repeats every 64px, so wrapping the offset is seamless
+      raf = requestAnimationFrame(() => el.style.setProperty("--grid-shift", `${(window.scrollY * 0.25) % 64}px`));
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -42,34 +28,14 @@ export default function AmbientBackground() {
   }, []);
 
   return (
-    <div aria-hidden className="ambient pointer-events-none fixed inset-0 -z-10 overflow-hidden print:hidden">
-      <div className="ambient-aurora ambient-a" />
-      <div className="ambient-aurora ambient-b" />
-      <div className="ambient-aurora ambient-c" />
-      <div className="ambient-rays" />
-      <div className="ambient-spot" />
-      <div className="ambient-horizon" />
-      {BOKEH.map((b, i) => (
-        <span
-          key={i}
-          className={`ambient-bokeh ${b.warm ? "is-warm" : ""}`}
-          style={
-            {
-              left: b.left,
-              top: b.top,
-              width: b.size,
-              height: b.size,
-              "--depth": b.depth,
-              "--dur": `${b.dur}s`,
-              "--delay": `${b.delay}s`,
-              filter: `blur(${(1 - b.depth) * 6 + 0.5}px)`,
-              opacity: 0.25 + b.depth * 0.5,
-            } as React.CSSProperties
-          }
-        />
-      ))}
-      <div className="ambient-vignette" />
-      <div className="ambient-grain" />
+    <div ref={ref} aria-hidden className="ambient pointer-events-none fixed inset-0 -z-10 overflow-hidden print:hidden">
+      <div className="ambient-plane ambient-floor">
+        <div className="ambient-grid" />
+      </div>
+      <div className="ambient-plane ambient-ceiling">
+        <div className="ambient-grid" />
+      </div>
+      <div className="ambient-fade" />
     </div>
   );
 }

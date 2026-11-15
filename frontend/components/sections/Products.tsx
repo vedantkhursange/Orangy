@@ -21,7 +21,7 @@ export default function Products() {
   if (!isLoading && (products?.length ?? 0) === 0) return null;
 
   return (
-    <section id="products" data-orange="right" data-model="tree" data-scale="1.15" className="relative py-20 md:py-28">
+    <section id="products" className="relative py-20 md:py-28">
       <div className="relative mx-auto max-w-7xl px-5 md:px-10">
         <Reveal>
           <div className="flex items-end justify-between gap-4">

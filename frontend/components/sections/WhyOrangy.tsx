@@ -4,7 +4,7 @@ import { whyOrangy } from "@/data/site";
 /** Sticky visual on the left, numbered story-points scrolling on the right. */
 export default function WhyOrangy() {
   return (
-    <section data-orange="left" data-model="tree" data-anim="orbit" data-x="-0.22" data-y="-0.14" data-scale="1.35" className="relative py-24 md:py-36">
+    <section data-orange="left" data-model="tree" data-x="-0.24" className="relative py-24 md:py-36">
       <div className="mx-auto grid max-w-7xl gap-14 px-6 md:grid-cols-[5fr_6fr] md:gap-20 md:px-10">
         <div className="md:sticky md:top-28 md:self-start">
           <Reveal>

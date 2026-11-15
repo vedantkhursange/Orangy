@@ -38,7 +38,7 @@ export default function Gallery() {
   }));
 
   return (
-    <section id="gallery" data-orange="right" data-anim="flip" data-scale="0.75" className="relative overflow-hidden py-20 md:py-32">
+    <section id="gallery" className="relative overflow-hidden py-20 md:py-32">
       <div className="relative mx-auto max-w-7xl px-5 md:px-10">
         <Reveal>
           <p data-reveal className="text-xs font-extrabold uppercase tracking-[0.25em] text-orange-glow">

@@ -11,7 +11,7 @@ export default function Hero() {
     <section
       id="home"
       data-orange="right"
-      data-scale="1.05"
+      data-scale="1.05" data-x="0.23"
       data-mobile="1"
       className="relative flex min-h-[100svh] items-end overflow-hidden pb-20 pt-[46svh] lg:items-center lg:pb-0 lg:pt-28"
     >

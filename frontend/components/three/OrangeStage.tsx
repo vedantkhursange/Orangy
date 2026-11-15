@@ -14,37 +14,25 @@ import type { Group } from "three";
  * data-model:  orange | tree | basket         (default orange)
  * data-x / data-y: optional desktop offsets in viewport fractions (-0.5 … 0.5)
  *
- * Scroll drives rotation and the model glides between positions, so the page
- * feels like one continuous 3D shot (Apple product-page style). When the
- * section changes model, the old one slides out sideways and the new one
- * enters: the orange from the side, the tree from far away, the basket from
- * below. The layer sits above the text (pointer-events off) so the fruit
- * reads as a real object over the page. On phones the model moves to the upper part of
- * the screen and shrinks. Reduced-motion users get a still model.
+ * The orange spins with scroll and slides out sideways. The tree and the
+ * basket never fly: they appear in place (the tree rooted to the bottom edge
+ * of the screen, standing still; the basket turning slowly on the spot).
+ * Nothing is rendered while no model is on screen, to keep scrolling smooth.
  */
 type Pos = "left" | "right" | "center" | "hide";
 type ModelName = "orange" | "tree" | "basket";
 
-/**
- * Progressive loading: a light preview (shown within a second) is swapped for
- * the original, full-quality model (original geometry and 4K textures; only
- * unused UV sets removed) as soon as it has downloaded.
- */
-const MODELS: Record<ModelName, { preview: string; full: string }> = {
-  orange: { preview: "/models/orange-half.glb", full: "/models/full/orange-half.glb" },
-  tree: { preview: "/models/orange-tree.glb", full: "/models/full/orange-tree.glb" },
-  basket: { preview: "/models/orange-basket.glb", full: "/models/full/orange-basket.glb" },
+const MODELS: Record<ModelName, string> = {
+  orange: "/models/orange-half.glb",
+  tree: "/models/orange-tree.glb",
+  basket: "/models/orange-basket.glb",
 };
 
-/**
- * Per-section motion (data-anim), so each section shows something new:
- * spin · tumble · grow · orbit · float · flip · turntable
- */
-type Anim = "spin" | "tumble" | "grow" | "orbit" | "float" | "flip" | "turntable";
+/** Per-section motion (data-anim). */
+type Anim = "spin" | "tumble" | "rooted" | "turntable";
 
-/** Where a model comes from when it enters. */
-const ENTER: Record<ModelName, "side" | "far" | "below"> = { orange: "side", tree: "far", basket: "below" };
-const FAR_Z = -28;
+/** The orange slides in from the side; the tree and basket appear in place. */
+const ENTER: Record<ModelName, "side" | "place"> = { orange: "side", tree: "place", basket: "place" };
 
 export default function OrangeStage() {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -64,7 +52,7 @@ export default function OrangeStage() {
       if (disposed) return;
 
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1.5 : 1.75));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1.25 : 1.5));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.05;
@@ -101,29 +89,19 @@ export default function OrangeStage() {
         const box = new THREE.Box3().setFromObject(model);
         const size = box.getSize(new THREE.Vector3());
         model.position.sub(box.getCenter(new THREE.Vector3()));
-        return 2.1 / Math.max(size.x, size.y, size.z);
+        const base = 2.1 / Math.max(size.x, size.y, size.z);
+        return { base, height: size.y * base };
       };
-
-      const dispose = (obj: Group) =>
-        obj.traverse((o) => {
-          const mesh = o as import("three").Mesh;
-          if (!mesh.isMesh) return;
-          mesh.geometry.dispose();
-          (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).forEach((m) => {
-            Object.values(m).forEach((v) => (v as { isTexture?: boolean })?.isTexture && (v as import("three").Texture).dispose());
-            m.dispose();
-          });
-        });
 
       await Promise.all(
         (Object.keys(MODELS) as ModelName[]).map(async (name) => {
           try {
-            const model = (await loader.loadAsync(MODELS[name].preview)).scene;
+            const model = (await loader.loadAsync(MODELS[name])).scene;
             const holder = new THREE.Group();
-            holder.userData.base = prepare(model);
+            Object.assign(holder.userData, prepare(model));
             holder.add(model);
             holder.scale.setScalar(0.0001);
-            holder.userData.st = { x: 0, y: 0, z: FAR_Z, vy: 0, on: false };
+            holder.userData.st = { x: 0, y: 0, k: 0, on: false };
             scene.add(holder);
             holders[name] = holder;
           } catch {
@@ -133,27 +111,8 @@ export default function OrangeStage() {
       );
       if (disposed) return;
 
-      // then upgrade each to full quality, one at a time (orange first: it is on screen)
-      (async () => {
-        for (const name of ["orange", "tree", "basket"] as ModelName[]) {
-          if (disposed) return;
-          try {
-            const full = (await loader.loadAsync(MODELS[name].full)).scene;
-            const holder = holders[name];
-            if (disposed || !holder) return;
-            const preview = holder.children[0] as Group;
-            holder.userData.base = prepare(full);
-            holder.remove(preview);
-            holder.add(full);
-            dispose(preview);
-          } catch {
-            /* keep the preview */
-          }
-        }
-      })();
-
       // where the model should be: x/y in viewport fractions, s = scale
-      const target = { x: 0.25, y: 0, s: 1, model: "orange" as ModelName, show: true, anim: "spin" as Anim, p: 0 };
+      const target = { x: 0.25, y: 0, s: 1, model: "orange" as ModelName, show: true, anim: "spin" as Anim, p: 0, pin: 0 };
       const cur = { s: 1 };
 
       const readSections = () => {
@@ -180,11 +139,13 @@ export default function OrangeStage() {
         if (mobile && !el?.dataset.mobile) pos = "hide";
         target.model = (el?.dataset.model as ModelName | undefined) ?? "orange";
         target.show = pos !== "hide";
-        target.anim = (el?.dataset.anim as Anim | undefined) ?? (target.model === "tree" ? "grow" : target.model === "basket" ? "turntable" : "spin");
+        target.anim = (el?.dataset.anim as Anim | undefined) ?? (target.model === "tree" ? "rooted" : target.model === "basket" ? "turntable" : "spin");
         if (el) {
           // 0 when the section enters at the bottom, 1 when it leaves at the top
           const r = el.getBoundingClientRect();
           target.p = Math.min(1, Math.max(0, (vh - r.top) / (vh + r.height)));
+          // how far the section's middle is from the screen's middle (basket rides with its section)
+          target.pin = 0.5 - (r.top + r.height / 2) / vh;
         }
         const s = Number(el?.dataset.scale ?? 1);
         if (mobile) {
@@ -221,6 +182,7 @@ export default function OrangeStage() {
 
       const clock = new THREE.Clock();
       let raf = 0;
+      let idle = false;
       const worldH = () => 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
 
       const tick = () => {
@@ -239,47 +201,41 @@ export default function OrangeStage() {
         camera.position.x = reduced ? 0 : Math.sin(smoothScroll * 0.0006) * 0.12; // slow pan
         camera.lookAt(0, 0, 0);
 
+        let anyVisible = false;
         (Object.keys(holders) as ModelName[]).forEach((name) => {
           const h = holders[name]!;
-          const st = h.userData.st as { x: number; y: number; z: number; vy: number; on: boolean };
+          const st = h.userData.st as { x: number; y: number; k: number; on: boolean };
           const active = target.show && target.model === name;
+          const inPlace = ENTER[name] === "place";
           const tx = target.x * ww;
           const ty = target.y * wh;
 
           if (active && !st.on) {
-            // (re)enter: start off-stage
-            const kind = ENTER[name];
-            st.x = kind === "side" ? (tx >= 0 ? 1 : -1) * ww : tx;
-            st.y = kind === "below" ? -wh : ty;
-            st.z = kind === "far" ? FAR_Z : 0;
-            st.vy = 0;
+            // (re)enter: the orange starts off-stage, the others start where they stay
+            st.x = inPlace ? tx : (tx >= 0 ? 1 : -1) * ww;
+            st.y = ty;
+            st.k = inPlace ? 0 : 1;
             st.on = true;
           }
-          let gx = tx;
-          let gy = ty;
-          let gz = 0;
-          if (!active) {
-            // exit sideways, towards the nearer edge
-            gx = (st.x >= 0 ? 1 : -1) * ww * 1.05;
-            gy = st.y;
-            gz = st.z;
-          }
-          const k = name === "tree" && active ? ease * 0.7 : ease; // the tree grows in a bit slower
-          st.x += (gx - st.x) * k;
-          st.z += (gz - st.z) * k;
-          if (name === "basket" && active && !reduced) {
-            // springy drop-in from below: a little overshoot, then settles
-            st.vy += (gy - st.y) * 60 * dt;
-            st.vy *= Math.pow(0.02, dt);
-            st.y += st.vy * dt;
+          if (inPlace) {
+            // no travel at all: just appear and disappear on the spot
+            if (active) {
+              st.x = tx;
+              st.y = ty + (name === "basket" ? target.pin * wh : 0);
+            }
+            st.k += ((active ? 1 : 0) - st.k) * ease;
+            if (!active && st.k < 0.02) st.on = false;
           } else {
-            st.y += (gy - st.y) * k;
-            st.vy = 0;
+            // exit sideways, towards the nearer edge
+            const gx = active ? tx : (st.x >= 0 ? 1 : -1) * ww * 1.05;
+            st.x += (gx - st.x) * ease;
+            if (active) st.y += (ty - st.y) * ease;
+            if (!active && Math.abs(st.x) > ww * 0.98) st.on = false;
           }
-          if (!active && Math.abs(st.x) > ww * 0.98) st.on = false;
 
           h.visible = st.on;
           if (!h.visible) return;
+          anyVisible = true;
 
           // per-section motion; the last one is kept while the model exits
           const anim: Anim = active ? target.anim : ((h.userData.anim as Anim) ?? "spin");
@@ -287,31 +243,16 @@ export default function OrangeStage() {
           h.userData.anim = anim;
           h.userData.p = p;
           const ss = smoothScroll;
-          let dx = 0;
-          let dy = reduced ? 0 : Math.sin(t * 0.8) * 0.05;
-          let ds = 1;
           let rot: [number, number, number];
-          switch (reduced ? "still" : anim) {
+          switch (reduced && anim !== "rooted" ? "still" : anim) {
             case "tumble": // end-over-end as you scroll through the section
               rot = [p * Math.PI * 2.2, 0.7 + t * 0.08, 0.25];
               break;
-            case "grow": // tree: comes in from far, sways in the wind, slowly turns
-              rot = [0.06, -0.6 + p * Math.PI * 0.9, Math.sin(t * 1.3) * 0.035];
-              break;
-            case "orbit": // tree: a full turn across the section plus a small circle
-              rot = [0.1, p * Math.PI * 2, Math.sin(t * 1.1) * 0.03];
-              dx = Math.sin(p * Math.PI * 2) * ww * 0.035;
-              break;
-            case "float": // weightless drift
-              rot = [Math.sin(t * 0.7) * 0.45, t * 0.3, Math.cos(t * 0.5) * 0.3];
-              dy = Math.sin(t * 1.2) * wh * 0.035;
-              break;
-            case "flip": // quick flips tied to scroll, with a breathing scale
-              rot = [0.3, p * Math.PI * 3, Math.sin(p * Math.PI) * 0.6];
-              ds = 1 + Math.sin(t * 1.6) * 0.03;
+            case "rooted": // tree: stands still
+              rot = [0, 0.5, 0];
               break;
             case "turntable": // basket on a slow display turntable
-              rot = [0.38 + Math.sin(t * 0.6) * 0.05, t * 0.35 + p * 1.5, 0];
+              rot = [0.38, t * 0.3, 0];
               break;
             case "still":
               rot = [0.25, 0.6, 0];
@@ -319,8 +260,21 @@ export default function OrangeStage() {
             default: // spin
               rot = [0.25 + Math.sin(ss * 0.0011) * 0.35, ss * 0.0022 + t * 0.12, Math.sin(ss * 0.0007) * 0.15];
           }
-          h.scale.setScalar(h.userData.base * fit * ds * (name === "tree" ? 1.25 : 1));
-          h.position.set(st.x + dx, st.y + dy, st.z);
+          if (name === "tree") {
+            // sized to the screen and rooted: the trunk meets the bottom edge
+            const scale = (Math.min(0.7 * wh, 0.62 * ww) / (h.userData.height as number)) * st.k;
+            h.scale.setScalar(Math.max(scale * (h.userData.base as number), 1e-4));
+            h.position.set(st.x, -wh / 2 + (scale * (h.userData.height as number)) / 2 - wh * 0.07, 0);
+            h.rotation.set(rot[0], rot[1], rot[2]);
+            return;
+          }
+          const bob = reduced || inPlace ? 0 : Math.sin(t * 0.8) * 0.05;
+          h.scale.setScalar(Math.max(h.userData.base * fit * st.k, 1e-4));
+          h.position.set(st.x, st.y + bob, 0);
+          if (anim === "turntable") {
+            h.rotation.set(rot[0], rot[1], rot[2]);
+            return;
+          }
           // blend towards the new motion along the shortest angle, so switching
           // sections never makes the model whirl
           const blend = Math.min(1, ease * 1.5);
@@ -330,17 +284,11 @@ export default function OrangeStage() {
           });
         });
 
-        // feed the background spotlight with the active model's screen position
-        const lit = target.show ? holders[target.model] : undefined;
-        const rootStyle = document.documentElement.style;
-        if (lit?.visible) {
-          const v = lit.getWorldPosition(new THREE.Vector3()).project(camera);
-          v.x = Math.max(-1.1, Math.min(1.1, v.x));
-          rootStyle.setProperty("--oe-gx", `${((v.x + 1) / 2) * 100}%`);
-          rootStyle.setProperty("--oe-gy", `${((1 - v.y) / 2) * 100}%`);
-          rootStyle.setProperty("--oe-glow", "1");
-        } else rootStyle.setProperty("--oe-glow", "0");
-
+        // nothing on screen: draw one empty frame, then stop paying for WebGL
+        if (!anyVisible) {
+          if (idle) return;
+          idle = true;
+        } else idle = false;
         renderer.render(scene, camera);
       };
       tick();
@@ -353,7 +301,6 @@ export default function OrangeStage() {
         pmrem.dispose();
         renderer.dispose();
         renderer.domElement.remove();
-        document.documentElement.style.setProperty("--oe-glow", "0");
       };
     })();
 
