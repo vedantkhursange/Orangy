@@ -333,9 +333,35 @@ body {
 .ambient-ceiling .ambient-grid {
   transform: translate3d(0, calc(var(--grid-shift, 0px) * -1), 0);
 }
-/* darken the middle so text sits on clean black */
+/* soft neutral studio light: the middle of the room is lit, the edges fall
+   off to black (no colour, so it never reads as a glow) */
 .ambient-fade {
   position: absolute;
   inset: 0;
-  background: radial-gradient(80% 42% at 50% 50%, #000 30%, transparent 100%);
+  background:
+    radial-gradient(70% 55% at 50% 45%, rgb(255 255 255 / 0.075) 0%, rgb(255 255 255 / 0.03) 45%, transparent 75%),
+    radial-gradient(120% 90% at 50% 50%, transparent 55%, #000 100%);
+}
+/* fine dust at two depths, drifting with scroll for parallax */
+.ambient-dust {
+  position: absolute;
+  inset: -400px 0;
+  will-change: transform;
+}
+.ambient-dust.is-far {
+  background-image:
+    radial-gradient(1px 1px at 23px 41px, rgb(255 255 255 / 0.5), transparent 100%),
+    radial-gradient(1px 1px at 131px 87px, rgb(255 255 255 / 0.35), transparent 100%),
+    radial-gradient(1px 1px at 201px 173px, rgb(255 255 255 / 0.45), transparent 100%),
+    radial-gradient(1px 1px at 77px 229px, rgb(255 255 255 / 0.3), transparent 100%);
+  background-size: 260px 260px;
+  transform: translate3d(0, calc(var(--dust-far, 0px) * -1), 0);
+}
+.ambient-dust.is-near {
+  background-image:
+    radial-gradient(1.5px 1.5px at 67px 113px, rgb(255 255 255 / 0.55), transparent 100%),
+    radial-gradient(2px 2px at 311px 59px, rgb(255 255 255 / 0.3), transparent 100%),
+    radial-gradient(1.5px 1.5px at 227px 347px, rgb(255 255 255 / 0.4), transparent 100%);
+  background-size: 400px 400px;
+  transform: translate3d(0, calc(var(--dust-near, 0px) * -1), 0);
 }

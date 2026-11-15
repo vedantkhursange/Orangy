@@ -113,6 +113,10 @@ export default function OrangeStage() {
 
       // where the model should be: x/y in viewport fractions, s = scale
       const target = { x: 0.25, y: 0, s: 1, model: "orange" as ModelName, show: true, anim: "spin" as Anim, p: 0, pin: 0 };
+      // the tree is planted in its section: it grows as the section scrolls in and
+      // rides away with the section's bottom edge (all in viewport fractions)
+      const tree = { on: false, x: -0.24, h: 0, floor: 0 };
+      const treeEl = document.querySelector<HTMLElement>('main section[data-model="tree"]');
       const cur = { s: 1 };
 
       const readSections = () => {
@@ -132,7 +136,18 @@ export default function OrangeStage() {
             best = n;
           }
         });
-        const el = best as HTMLElement | null;
+        let el = best as HTMLElement | null;
+        tree.on = false;
+        if (treeEl) {
+          const r = treeEl.getBoundingClientRect();
+          if (!mobile && r.top < vh * 0.95 && r.bottom > vh * 0.05) {
+            tree.on = true;
+            tree.x = treeEl.dataset.x ? Number(treeEl.dataset.x) : -0.24;
+            tree.h = Math.min(0.7, ((vh - Math.max(r.top, 0)) / vh) * 0.9);
+            tree.floor = Math.max(0, 1 - r.bottom / vh);
+          }
+          if (el === treeEl) el = null; // the tree section never shows another model
+        }
         let pos = (el?.dataset.orange as Pos | undefined) ?? "hide";
         // narrow screens: text spans the full width, so the model only appears
         // in sections laid out for it (hero, closing basket)
@@ -205,7 +220,7 @@ export default function OrangeStage() {
         (Object.keys(holders) as ModelName[]).forEach((name) => {
           const h = holders[name]!;
           const st = h.userData.st as { x: number; y: number; k: number; on: boolean };
-          const active = target.show && target.model === name;
+          const active = name === "tree" ? tree.on : target.show && target.model === name;
           const inPlace = ENTER[name] === "place";
           const tx = target.x * ww;
           const ty = target.y * wh;
@@ -223,8 +238,13 @@ export default function OrangeStage() {
               st.x = tx;
               st.y = ty + (name === "basket" ? target.pin * wh : 0);
             }
-            st.k += ((active ? 1 : 0) - st.k) * ease;
-            if (!active && st.k < 0.02) st.on = false;
+            if (name === "tree") {
+              st.k = 1;
+              st.on = active;
+            } else {
+              st.k += ((active ? 1 : 0) - st.k) * ease;
+              if (!active && st.k < 0.02) st.on = false;
+            }
           } else {
             // exit sideways, towards the nearer edge
             const gx = active ? tx : (st.x >= 0 ? 1 : -1) * ww * 1.05;
@@ -262,10 +282,13 @@ export default function OrangeStage() {
           }
           if (name === "tree") {
             // sized to the screen and rooted: the trunk meets the bottom edge
-            const scale = (Math.min(0.7 * wh, 0.62 * ww) / (h.userData.height as number)) * st.k;
+            const hh = h.userData.height as number;
+            const scale = (Math.min(tree.h * wh, 0.62 * ww) / hh) * st.k;
             h.scale.setScalar(Math.max(scale * (h.userData.base as number), 1e-4));
-            h.position.set(st.x, -wh / 2 + (scale * (h.userData.height as number)) / 2 - wh * 0.07, 0);
-            h.rotation.set(rot[0], rot[1], rot[2]);
+            // the trunk runs 7% past its ground line (the screen edge, then the
+            // section's bottom rule); the canvas is clipped at that line below
+            h.position.set(tree.x * ww, -wh / 2 + (scale * hh) / 2 + (tree.floor - 0.07) * wh, 0);
+            h.rotation.set(0, 0.5, 0);
             return;
           }
           const bob = reduced || inPlace ? 0 : Math.sin(t * 0.8) * 0.05;
@@ -283,6 +306,12 @@ export default function OrangeStage() {
             h.rotation[ax] += d * blend;
           });
         });
+
+        // the tree stands behind the page content; the fruit floats above it
+        const z = holders.tree?.visible ? "-1" : "30";
+        if (mount.style.zIndex !== z) mount.style.zIndex = z;
+        const clip = holders.tree?.visible && tree.floor > 0 ? `inset(0 0 ${(tree.floor * 100).toFixed(2)}% 0)` : "none";
+        if (mount.style.clipPath !== clip) mount.style.clipPath = clip;
 
         // nothing on screen: draw one empty frame, then stop paying for WebGL
         if (!anyVisible) {
@@ -314,7 +343,7 @@ export default function OrangeStage() {
     <div
       ref={mountRef}
       aria-hidden
-      className="pointer-events-none fixed inset-0 z-30 opacity-0 transition-opacity duration-1000 data-[ready='1']:opacity-100 [&>canvas]:h-full [&>canvas]:w-full"
+      className="pointer-events-none fixed inset-0 opacity-0 transition-opacity duration-1000 data-[ready='1']:opacity-100 [&>canvas]:h-full [&>canvas]:w-full"
     />
   );
 }
