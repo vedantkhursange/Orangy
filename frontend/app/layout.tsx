@@ -4,6 +4,7 @@ import "./globals.css";
 import SmoothScroll from "@/components/animations/SmoothScroll";
 import Providers from "@/components/providers/Providers";
 import BottomNav from "@/components/navigation/BottomNav";
+import AmbientBackground from "@/components/three/AmbientBackground";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-brand focus:px-4 focus:py-2 focus:font-bold focus:text-white">
           Skip to content
         </a>
+        <AmbientBackground />
         <Providers>
           <SmoothScroll>{children}</SmoothScroll>
           <BottomNav />

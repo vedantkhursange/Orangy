@@ -36,7 +36,7 @@ export default function Manifesto() {
   );
 
   return (
-    <section id="experience" data-orange="right" data-x="0.34" data-y="-0.08" data-scale="0.85" ref={ref} className="relative overflow-hidden py-28 md:py-40">
+    <section id="experience" data-orange="right" data-anim="tumble" data-x="0.29" data-y="-0.08" data-scale="0.85" ref={ref} className="relative overflow-hidden py-28 md:py-40">
       <div className="mx-auto max-w-6xl px-6 md:px-10">
         <p className="mb-8 text-xs font-semibold uppercase tracking-[0.35em] text-orange-glow">
           {manifesto.kicker}

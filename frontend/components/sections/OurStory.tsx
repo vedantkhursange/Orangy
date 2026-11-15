@@ -19,7 +19,7 @@ export default function OurStory() {
   const ordered = [...(slides ?? [])].sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
-    <section id="story" data-orange="left" data-scale="0.8" className="relative overflow-hidden py-24 md:py-36">
+    <section id="story" data-orange="left" data-anim="float" data-scale="0.8" className="relative overflow-hidden py-24 md:py-36">
       <div className="mx-auto grid max-w-7xl items-center gap-14 px-6 md:grid-cols-2 md:gap-20 md:px-10">
         <Reveal>
           <div data-reveal>
