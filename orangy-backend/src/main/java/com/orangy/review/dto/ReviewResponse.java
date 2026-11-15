@@ -20,4 +20,6 @@ public class ReviewResponse {
     private String comment;
     private boolean isApproved;
     private LocalDateTime createdAt;
+    private String city;
+    private String photoUrl;
 }

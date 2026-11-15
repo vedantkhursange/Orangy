@@ -9,10 +9,11 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, getTokens, setTokens } from "@/lib/api";
-import type { AuthResponse, Cart, UserProfile } from "@/lib/types";
+import type { AuthResponse, Cart, CartItem, UserProfile } from "@/lib/types";
 
 /* ─────────────── theme ─────────────── */
 
@@ -24,22 +25,9 @@ const ThemeCtx = createContext<{ theme: Theme; toggle: () => void }>({
 export const useTheme = () => useContext(ThemeCtx);
 
 function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
-
-  useEffect(() => {
-    const stored = (localStorage.getItem("orangy-theme") as Theme | null) ?? "light";
-    setTheme(stored);
-    document.documentElement.classList.toggle("dark", stored === "dark");
-  }, []);
-
-  const toggle = useCallback(() => {
-    setTheme((prev) => {
-      const next = prev === "light" ? "dark" : "light";
-      localStorage.setItem("orangy-theme", next);
-      document.documentElement.classList.toggle("dark", next === "dark");
-      return next;
-    });
-  }, []);
+  // Black & orange is the brand: the site always renders the dark palette.
+  const theme: Theme = "dark";
+  const toggle = useCallback(() => {}, []);
 
   return <ThemeCtx.Provider value={{ theme, toggle }}>{children}</ThemeCtx.Provider>;
 }
@@ -151,16 +139,181 @@ function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
 
-/* ─────────────── cart badge helper ─────────────── */
+/* ─────────────── cart ───────────────
+ * One basket API for everyone. Signed-in shoppers use the server cart (Redis);
+ * guests keep their basket in localStorage and check out without an account.
+ * When a guest logs in, their local basket is merged into the server cart.
+ */
 
-export function useCart(enabled = true) {
-  const { user } = useAuth();
-  return useQuery({
+const GUEST_CART_KEY = "orangy_guest_cart";
+
+/** What the product page knows about a line before it is in the basket. */
+export type CartLineInput = Omit<CartItem, "quantity" | "lineTotal"> & { maxQty?: number };
+type GuestLine = CartLineInput & { quantity: number };
+
+type CartCtxValue = {
+  cart: Cart | undefined;
+  isLoading: boolean;
+  isGuest: boolean;
+  add: (line: CartLineInput, quantity?: number) => Promise<void>;
+  setQty: (variantId: string, quantity: number) => Promise<void>;
+  remove: (variantId: string) => Promise<void>;
+  clear: () => Promise<void>;
+};
+const CartCtx = createContext<CartCtxValue | null>(null);
+
+const GUEST_EVENT = "orangy-guest-cart";
+function subscribeGuest(onChange: () => void) {
+  const onStorage = (e: StorageEvent) => e.key === GUEST_CART_KEY && onChange();
+  window.addEventListener("storage", onStorage);
+  window.addEventListener(GUEST_EVENT, onChange);
+  return () => {
+    window.removeEventListener("storage", onStorage);
+    window.removeEventListener(GUEST_EVENT, onChange);
+  };
+}
+
+function readGuest(): GuestLine[] {
+  try {
+    const raw = localStorage.getItem(GUEST_CART_KEY);
+    return raw ? (JSON.parse(raw) as GuestLine[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function toCart(lines: GuestLine[]): Cart {
+  const items: CartItem[] = lines.map((l) => ({
+    variantId: l.variantId,
+    productId: l.productId,
+    productName: l.productName,
+    variantLabel: l.variantLabel,
+    unitPrice: l.unitPrice,
+    thumbnailUrl: l.thumbnailUrl,
+    quantity: l.quantity,
+    lineTotal: l.unitPrice * l.quantity,
+  }));
+  return {
+    items,
+    subtotal: items.reduce((s, i) => s + i.lineTotal, 0),
+    totalItems: items.reduce((n, i) => n + i.quantity, 0),
+  };
+}
+
+function CartProvider({ children }: { children: ReactNode }) {
+  const { user, loading } = useAuth();
+  const qc = useQueryClient();
+  const guestRaw = useSyncExternalStore(subscribeGuest, () => localStorage.getItem(GUEST_CART_KEY) ?? "", () => "");
+  const guest = useMemo<GuestLine[]>(() => {
+    try {
+      return guestRaw ? (JSON.parse(guestRaw) as GuestLine[]) : [];
+    } catch {
+      return [];
+    }
+  }, [guestRaw]);
+
+  const saveGuest = useCallback((lines: GuestLine[]) => {
+    if (lines.length) localStorage.setItem(GUEST_CART_KEY, JSON.stringify(lines));
+    else localStorage.removeItem(GUEST_CART_KEY);
+    window.dispatchEvent(new Event(GUEST_EVENT));
+  }, []);
+
+  const server = useQuery({
     queryKey: ["cart"],
     queryFn: () => api.get<Cart>("/api/cart"),
-    enabled: enabled && !!user,
+    enabled: !!user,
     staleTime: 10_000,
   });
+
+  // guest → signed in: move the local basket into the account's basket
+  const merging = useRef(false);
+  useEffect(() => {
+    if (!user || merging.current) return;
+    const lines = readGuest();
+    if (!lines.length) return;
+    merging.current = true;
+    (async () => {
+      for (const l of lines) {
+        try {
+          await api.post<Cart>("/api/cart/items", { variantId: l.variantId, quantity: l.quantity });
+        } catch {
+          /* out of stock or removed — skip */
+        }
+      }
+      saveGuest([]);
+      merging.current = false;
+      qc.invalidateQueries({ queryKey: ["cart"] });
+    })();
+  }, [user, qc, saveGuest]);
+
+  const refresh = useCallback(() => qc.invalidateQueries({ queryKey: ["cart"] }), [qc]);
+
+  const value = useMemo<CartCtxValue>(() => {
+    if (user) {
+      return {
+        cart: server.data,
+        isLoading: server.isLoading,
+        isGuest: false,
+        add: async (line, quantity = 1) => {
+          await api.post<Cart>("/api/cart/items", { variantId: line.variantId, quantity });
+          await refresh();
+        },
+        setQty: async (variantId, quantity) => {
+          if (quantity <= 0) await api.del<Cart>(`/api/cart/items/${variantId}`);
+          else await api.put<Cart>(`/api/cart/items/${variantId}`, { quantity });
+          await refresh();
+        },
+        remove: async (variantId) => {
+          await api.del<Cart>(`/api/cart/items/${variantId}`);
+          await refresh();
+        },
+        clear: async () => {
+          await api.del<void>("/api/cart");
+          await refresh();
+        },
+      };
+    }
+    const cap = (l: GuestLine, q: number) => {
+      if (l.maxQty != null && q > l.maxQty) throw new Error(`Only ${l.maxQty} left in stock.`);
+      return q;
+    };
+    return {
+      cart: toCart(guest),
+      isLoading: loading,
+      isGuest: true,
+      add: async (line, quantity = 1) => {
+        const cur = readGuest();
+        const hit = cur.find((l) => l.variantId === line.variantId);
+        if (hit) hit.quantity = cap(hit, hit.quantity + quantity);
+        else cur.push({ ...line, quantity: cap({ ...line, quantity: 0 }, quantity) });
+        saveGuest(cur);
+      },
+      setQty: async (variantId, quantity) => {
+        const cur = readGuest();
+        saveGuest(
+          quantity <= 0
+            ? cur.filter((l) => l.variantId !== variantId)
+            : cur.map((l) => (l.variantId === variantId ? { ...l, quantity: cap(l, quantity) } : l)),
+        );
+      },
+      remove: async (variantId) => saveGuest(readGuest().filter((l) => l.variantId !== variantId)),
+      clear: async () => saveGuest([]),
+    };
+  }, [user, loading, server.data, server.isLoading, guest, refresh, saveGuest]);
+
+  return <CartCtx.Provider value={value}>{children}</CartCtx.Provider>;
+}
+
+/** Basket contents for guests and signed-in shoppers alike. */
+export function useCart() {
+  const c = useContext(CartCtx);
+  return { data: c?.cart, isLoading: c?.isLoading ?? true };
+}
+
+export function useCartActions() {
+  const c = useContext(CartCtx);
+  if (!c) throw new Error("useCartActions must be used inside <Providers>");
+  return c;
 }
 
 /* ─────────────── root ─────────────── */
@@ -176,7 +329,9 @@ export default function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={client}>
       <ThemeProvider>
         <ToastProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <CartProvider>{children}</CartProvider>
+          </AuthProvider>
         </ToastProvider>
       </ThemeProvider>
     </QueryClientProvider>

@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BadgeCheck, MapPin, ShieldCheck, ShoppingCart, Truck, Zap } from "lucide-react";
 import { api, inr } from "@/lib/api";
-import type { Cart, MediaAsset, Page as SpringPage, Product, Review } from "@/lib/types";
-import { useAuth, useCart, useToast } from "@/components/providers/Providers";
+import { cdn } from "@/lib/media";
+import GuestReviewForm from "@/components/review/GuestReviewForm";
+import type { MediaAsset, Page as SpringPage, Product, Review } from "@/lib/types";
+import { useAuth, useCart, useCartActions, useToast } from "@/components/providers/Providers";
 import ProductGallery from "@/components/product/ProductGallery";
 import type { ViewerItem } from "@/components/media/MediaViewer";
 import OffersPanel from "@/components/product/OffersPanel";
@@ -18,10 +20,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [variantId, setVariantId] = useState<string | null>(null);
   const [variantError, setVariantError] = useState(false);
   const [buyingNow, setBuyingNow] = useState(false);
-  const { user } = useAuth();
   const { toast } = useToast();
   const { data: cart } = useCart();
-  const qc = useQueryClient();
   const router = useRouter();
 
   const { data: product, isLoading } = useQuery({
@@ -65,23 +65,31 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     [cart, variant],
   );
 
-  const addToCart = useMutation({
-    mutationFn: (quantity: number) => api.post<Cart>("/api/cart/items", { variantId: variant!.id, quantity }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["cart"] }),
-    onError: (e) => toast(e instanceof Error ? e.message : "Could not add to cart.", "error"),
+  const cartApi = useCartActions();
+  const [cartBusy, setCartBusy] = useState(false);
+  const run = async (fn: () => Promise<void>) => {
+    setCartBusy(true);
+    try {
+      await fn();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Could not update your basket.", "error");
+      throw e;
+    } finally {
+      setCartBusy(false);
+    }
+  };
+  const lineFor = (v: NonNullable<typeof variant>) => ({
+    variantId: v.id,
+    productId: id,
+    productName: product?.name ?? "",
+    variantLabel: v.label,
+    unitPrice: v.price,
+    thumbnailUrl: v.thumbnailImageUrl ?? mediaItems.find((m) => m.type === "IMAGE")?.url ?? null,
+    maxQty: v.stockCount,
   });
-
-  const updateCartQty = useMutation({
-    mutationFn: (quantity: number) => api.put<Cart>(`/api/cart/items/${variant!.id}`, { quantity }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["cart"] }),
-    onError: (e) => toast(e instanceof Error ? e.message : "Could not update quantity.", "error"),
-  });
-
-  const removeFromCart = useMutation({
-    mutationFn: () => api.del<Cart>(`/api/cart/items/${variant!.id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["cart"] }),
-    onError: (e) => toast(e instanceof Error ? e.message : "Could not remove item.", "error"),
-  });
+  const addToCart = { mutate: (q: number) => run(() => cartApi.add(lineFor(variant!), q)).catch(() => {}), mutateAsync: (q: number) => run(() => cartApi.add(lineFor(variant!), q)), isPending: cartBusy };
+  const updateCartQty = { mutate: (q: number) => run(() => cartApi.setQty(variant!.id, q)).catch(() => {}), isPending: cartBusy };
+  const removeFromCart = { mutate: () => run(() => cartApi.remove(variant!.id)).catch(() => {}), isPending: cartBusy };
 
   const requireVariant = () => {
     if (variant) {
@@ -93,19 +101,20 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   };
 
   const handleAddToBasket = () => {
-    if (!user) { toast("Log in to start your basket.", "info"); router.push("/login"); return; }
     if (!requireVariant()) return;
-    addToCart.mutate(1);
-    toast("Added to your basket.", "success");
+    run(() => cartApi.add(lineFor(variant!), 1))
+      .then(() => toast("Added to your basket.", "success"))
+      .catch(() => {});
   };
 
   const handleBuyNow = async () => {
-    if (!user) { toast("Log in to continue.", "info"); router.push("/login"); return; }
     if (!requireVariant()) return;
     setBuyingNow(true);
     try {
       if (cartQty === 0) await addToCart.mutateAsync(1);
       router.push("/checkout"); // skip the cart review page, like Buy Now on Amazon/Flipkart
+    } catch {
+      /* toast already shown */
     } finally {
       setBuyingNow(false);
     }
@@ -321,10 +330,14 @@ function ReviewsSection({ productId }: { productId: string }) {
               {reviews.map((r) => (
                 <Card key={r.id} className="p-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-ink">{r.userName ?? "Verified buyer"}</span>
+                    <span className="text-sm font-semibold text-ink">{r.userName ?? "Verified buyer"}{r.city && <span className="font-normal text-ink/50"> · {r.city}</span>}</span>
                     <Stars value={r.rating} />
                   </div>
                   {r.comment && <p className="mt-2 text-sm leading-relaxed text-ink/70">{r.comment}</p>}
+                  {r.photoUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={cdn(r.photoUrl, 480)} alt={`Photo from ${r.userName ?? "a customer"}`} loading="lazy" className="mt-3 h-40 w-auto rounded-xl object-cover" />
+                  )}
                   <p className="mt-2 text-xs text-ink/40">{new Date(r.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
                 </Card>
               ))}
@@ -347,7 +360,9 @@ function ReviewsSection({ productId }: { productId: string }) {
               </Button>
             </div>
           ) : (
-            <p className="mt-3 text-sm text-ink/60">Log in to share your experience with this harvest.</p>
+            <div className="mt-4">
+              <GuestReviewForm productId={productId} compact />
+            </div>
           )}
         </Card>
       </div>

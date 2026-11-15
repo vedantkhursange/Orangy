@@ -13,7 +13,7 @@ export default function ProductCard({ product, size = "md" }: { product: Product
   return (
     <Link href={`/products/${product.id}`} className="group block rounded-3xl outline-offset-4 transition active:scale-[0.98]">
       <div
-        className="relative overflow-hidden rounded-3xl bg-surface-2 shadow-card transition duration-300 group-hover:-translate-y-1 group-hover:shadow-lift"
+        className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-card transition duration-300 group-hover:-translate-y-1 group-hover:shadow-lift"
         style={{ aspectRatio: size === "lg" ? "4/5" : "1/1" }}
       >
         {product.thumbnailUrl ? (
@@ -33,7 +33,7 @@ export default function ProductCard({ product, size = "md" }: { product: Product
           </div>
         )}
         {product.category && (
-          <span className="absolute left-3 top-3 rounded-lg bg-surface/95 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-brand-deep shadow-sm">
+          <span className="absolute left-3 top-3 rounded-lg bg-black/60 px-2 py-1 backdrop-blur-md text-[10px] font-extrabold uppercase tracking-wider text-brand-deep shadow-sm">
             {product.category}
           </span>
         )}

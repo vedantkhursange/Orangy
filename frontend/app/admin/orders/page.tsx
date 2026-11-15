@@ -57,7 +57,13 @@ export default function AdminOrdersPage() {
                 {orders.map((o) => (
                   <tr key={o.id}>
                     <td className="px-4 py-3">
-                      <p className="font-mono text-xs text-ink/70">#{o.id.slice(0, 8)}</p>
+                      <p className="font-mono text-xs text-ink/70">#{o.id.slice(0, 8)} {o.guest && <span className="ml-1 rounded bg-orange/15 px-1.5 py-0.5 font-sans text-[10px] font-bold uppercase text-orange">Guest</span>}</p>
+                      {o.customerName && (
+                        <p className="mt-0.5 text-xs text-ink/70">
+                          {o.customerName}
+                          {o.customerPhone && <a href={`tel:${o.customerPhone}`} className="ml-1 text-orange hover:underline">{o.customerPhone}</a>}
+                        </p>
+                      )}
                       <p className="mt-0.5 max-w-[180px] truncate text-xs text-ink/45">
                         {o.deliveryAddress?.city}, {o.deliveryAddress?.state}
                       </p>

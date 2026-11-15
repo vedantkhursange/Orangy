@@ -2,52 +2,31 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { Leaf, Trash2 } from "lucide-react";
-import { api, inr } from "@/lib/api";
-import type { Cart } from "@/lib/types";
-import { useAuth, useCart, useToast } from "@/components/providers/Providers";
+import { inr } from "@/lib/api";
+import { useCart, useCartActions, useToast } from "@/components/providers/Providers";
 import { Button, Card, EmptyState, QtyStepper, Spinner } from "@/components/ui/ui";
 import { cdn } from "@/lib/media";
 
 export default function CartPage() {
-  const { user, loading } = useAuth();
   const { data: cart, isLoading } = useCart();
-  const qc = useQueryClient();
+  const cartApi = useCartActions();
+  const [busy, setBusy] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
-  const update = useMutation({
-    mutationFn: ({ variantId, quantity }: { variantId: string; quantity: number }) =>
-      api.put<Cart>(`/api/cart/items/${variantId}`, { quantity }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["cart"] }),
-    onError: (e) => toast(e instanceof Error ? e.message : "Could not update quantity.", "error"),
-  });
+  const run = (fn: () => Promise<void>) => {
+    setBusy(true);
+    fn()
+      .catch((e) => toast(e instanceof Error ? e.message : "Could not update your basket.", "error"))
+      .finally(() => setBusy(false));
+  };
+  const update = { mutate: ({ variantId, quantity }: { variantId: string; quantity: number }) => run(() => cartApi.setQty(variantId, quantity)) };
+  const remove = { mutate: (variantId: string) => run(() => cartApi.remove(variantId)) };
+  const clear = { mutate: () => run(() => cartApi.clear()), isPending: busy };
 
-  const remove = useMutation({
-    mutationFn: (variantId: string) => api.del<Cart>(`/api/cart/items/${variantId}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["cart"] }),
-    onError: (e) => toast(e instanceof Error ? e.message : "Could not remove item.", "error"),
-  });
-
-  const clear = useMutation({
-    mutationFn: () => api.del<void>("/api/cart"),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["cart"] }),
-  });
-
-  if (!loading && !user) {
-    return (
-      <div className="mx-auto max-w-3xl px-4 py-20">
-        <EmptyState
-          title="Your basket is waiting"
-          sub="Log in to see your basket and check out."
-          action={<Button onClick={() => router.push("/login")}>Log in</Button>}
-        />
-      </div>
-    );
-  }
-
-  if (isLoading || loading) {
+  if (isLoading) {
     return <div className="flex justify-center py-24"><Spinner /></div>;
   }
 

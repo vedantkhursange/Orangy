@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit, Inter } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/components/animations/SmoothScroll";
@@ -22,6 +22,8 @@ const TITLE = "Orange Express — Born Under the Sun";
 const DESCRIPTION =
   "Farmer-owned oranges, from our family groves to your table. Fresh fruit and cold-pressed juice, picked by the hands that raised them.";
 
+export const viewport: Viewport = { themeColor: "#050506", colorScheme: "dark" };
+
 export const metadata: Metadata = {
   // absolute URLs for OG/canonical tags — without this, social cards and
   // canonicals resolve against localhost
@@ -40,14 +42,9 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-const themeInit = `try{if(localStorage.getItem('orangy-theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}`;
-
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en-IN" className={`${outfit.variable} ${inter.variable} h-full antialiased`} suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
-      </head>
+    <html lang="en-IN" className={`dark ${outfit.variable} ${inter.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col bg-cream text-ink">
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-brand focus:px-4 focus:py-2 focus:font-bold focus:text-white">
           Skip to content

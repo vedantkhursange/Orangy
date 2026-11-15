@@ -21,7 +21,7 @@ export default function Products() {
   if (!isLoading && (products?.length ?? 0) === 0) return null;
 
   return (
-    <section id="products" className="relative overflow-hidden bg-surface py-20 md:py-28">
+    <section id="products" className="relative py-20 md:py-28">
       <div className="pointer-events-none absolute -right-32 -top-32 h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgb(252_116_25/0.14),transparent_65%)]" />
       <div className="pattern-dots absolute left-0 top-10 h-40 w-40 opacity-60" />
       <div className="relative mx-auto max-w-7xl px-5 md:px-10">

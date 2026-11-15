@@ -1,11 +1,10 @@
-import Image from "next/image";
 import Reveal from "@/components/animations/Reveal";
 import { whyOrangy } from "@/data/site";
 
 /** Sticky visual on the left, numbered story-points scrolling on the right. */
 export default function WhyOrangy() {
   return (
-    <section className="bg-sand/60 py-24 md:py-36">
+    <section data-orange="left" data-scale="0.95" className="relative py-24 md:py-36">
       <div className="mx-auto grid max-w-7xl gap-14 px-6 md:grid-cols-[5fr_6fr] md:gap-20 md:px-10">
         <div className="md:sticky md:top-28 md:self-start">
           <Reveal>
@@ -15,27 +14,15 @@ export default function WhyOrangy() {
             <h2 data-reveal className="display mt-4 text-4xl font-bold leading-tight text-ink md:text-5xl">
               {whyOrangy.title}
             </h2>
-            <div
-              data-reveal
-              className="relative mt-10 hidden overflow-hidden rounded-[28px] shadow-xl shadow-earth/10 md:block"
-              style={{ aspectRatio: "4/3" }}
-            >
-              <Image
-                src="/images/cut.webp"
-                alt="Freshly cut Orange Express orange"
-                fill
-                sizes="(max-width: 768px) 100vw, 40vw"
-                className="object-cover"
-                style={{ objectPosition: "55% 55%" }}
-              />
-            </div>
+            {/* the 3D orange from <OrangeStage/> floats in this space on desktop */}
+            <div className="mt-10 hidden md:block" style={{ aspectRatio: "4/3" }} aria-hidden />
           </Reveal>
         </div>
 
         <Reveal stagger={0.1}>
           <ol className="flex flex-col">
             {whyOrangy.points.map((pt) => (
-              <li key={pt.n} data-reveal className="group border-t border-ink/10 py-8 first:border-t-0 md:py-10">
+              <li key={pt.n} data-reveal className="glass group mb-4 rounded-3xl p-6 md:p-8">
                 <div className="flex items-start gap-6">
                   <span className="display text-sm font-bold text-orange-deep/60 transition-colors group-hover:text-orange-deep md:text-base">
                     {pt.n}

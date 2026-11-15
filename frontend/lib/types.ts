@@ -144,6 +144,10 @@ export type Order = {
   deliveryAddress: Address;
   items: OrderItem[];
   createdAt: string;
+  guest?: boolean;
+  customerName?: string | null;
+  customerPhone?: string | null;
+  customerEmail?: string | null;
 };
 
 /* ── reviews ── */
@@ -156,6 +160,8 @@ export type Review = {
   comment: string | null;
   approved?: boolean;
   createdAt: string;
+  city?: string | null;
+  photoUrl?: string | null;
 };
 
 /* ── admin requests ── */

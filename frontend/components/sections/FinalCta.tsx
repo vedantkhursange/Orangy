@@ -1,42 +1,27 @@
-import Image from "next/image";
 import Link from "next/link";
 import Reveal from "@/components/animations/Reveal";
 import { finalCta } from "@/data/site";
 
-/** Closing statement over the final glass shot. */
+/** Closing statement. The 3D basket from <OrangeStage/> sits on the right. */
 export default function FinalCta() {
   return (
-    <section id="contact" className="relative flex min-h-[88vh] items-center overflow-hidden">
-      <Image
-        src="/images/glass.webp"
-        alt="A glass of fresh Orange Express juice in golden light"
-        fill
-        sizes="100vw"
-        className="object-cover"
-        style={{ objectPosition: "62% 45%" }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#1c1208]/80 via-[#1c1208]/40 to-transparent" />
-
-      <Reveal className="relative mx-auto w-full max-w-7xl px-6 py-28 md:px-10">
-        <h2 data-reveal className="display max-w-xl text-5xl font-bold leading-[1.05] text-cream-fixed-soft md:text-7xl">
-          {finalCta.title}
-        </h2>
-        <p data-reveal className="mt-6 max-w-md text-base leading-relaxed text-cream-fixed/80 md:text-lg">
-          {finalCta.sub}
-        </p>
-        <div data-reveal className="mt-10 flex flex-wrap gap-4">
-          <Link
-            href="/products"
-            className="rounded-full bg-orange px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-orange/30 transition hover:bg-orange-deep"
-          >
-            {finalCta.primary}
-          </Link>
-          <a
-            href="#home"
-            className="rounded-full border border-cream-fixed/40 px-8 py-4 text-sm font-semibold text-cream-fixed-soft backdrop-blur-sm transition hover:border-cream-fixed/80 hover:bg-cream-fixed/10"
-          >
-            {finalCta.secondary}
-          </a>
+    <section id="contact" data-orange="right" data-model="basket" data-scale="1.5" data-mobile="1" className="relative flex min-h-[90svh] items-center overflow-hidden">
+      <Reveal className="relative mx-auto w-full max-w-7xl px-6 pb-16 pt-[46svh] md:px-10 lg:py-28">
+        <div className="glass max-w-xl rounded-[32px] p-8 md:p-12">
+          <h2 data-reveal className="display text-4xl font-bold leading-[1.05] text-white md:text-6xl">
+            <span className="text-gradient">{finalCta.title}</span>
+          </h2>
+          <p data-reveal className="mt-5 max-w-md text-base leading-relaxed text-white/70 md:text-lg">
+            {finalCta.sub}
+          </p>
+          <div data-reveal className="mt-8 flex flex-wrap gap-3">
+            <Link href="/products" className="orange-ring rounded-full bg-orange px-7 py-3.5 text-sm font-bold text-white transition hover:brightness-110">
+              {finalCta.primary}
+            </Link>
+            <Link href="/review" className="rounded-full border border-white/20 bg-white/5 px-7 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:border-white/40">
+              Leave a review
+            </Link>
+          </div>
         </div>
       </Reveal>
     </section>

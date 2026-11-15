@@ -28,8 +28,14 @@ public class Review {
     private Product product;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "user_id")
+    private User user; // null for no-login reviews (gift-card QR flow)
+
+    private String reviewerName;
+    private String reviewerCity;
+
+    @Column(length = 1000)
+    private String photoUrl;
 
     @Column(nullable = false)
     private int rating; // 1 to 5

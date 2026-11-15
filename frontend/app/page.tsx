@@ -1,5 +1,6 @@
 import Navbar from "@/components/navigation/Navbar";
-import ExpressFilm from "@/components/film/ExpressFilm";
+import OrangeStage from "@/components/three/OrangeStage";
+import Hero from "@/components/sections/Hero";
 import Manifesto from "@/components/sections/Manifesto";
 import Products from "@/components/sections/Products";
 import WhyOrangy from "@/components/sections/WhyOrangy";
@@ -10,16 +11,19 @@ import Footer from "@/components/sections/Footer";
 
 export default function Home() {
   return (
-    <main id="main">
-      <Navbar />
-      <ExpressFilm />
-      <Manifesto />
-      <Products />
-      <WhyOrangy />
-      <OurStory />
-      <Gallery />
-      <FinalCta />
+    <>
+      <OrangeStage />
+      <main id="main" className="relative z-10">
+        <Navbar />
+        <Hero />
+        <Manifesto />
+        <Products />
+        <WhyOrangy />
+        <OurStory />
+        <Gallery />
+        <FinalCta />
+      </main>
       <Footer />
-    </main>
+    </>
   );
 }

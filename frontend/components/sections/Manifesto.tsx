@@ -36,7 +36,7 @@ export default function Manifesto() {
   );
 
   return (
-    <section id="experience" ref={ref} className="relative overflow-hidden bg-dusk py-28 md:py-40 grain">
+    <section id="experience" data-orange="right" data-scale="0.9" ref={ref} className="relative overflow-hidden py-28 md:py-40">
       {/* warm radial glow */}
       <div
         className="pointer-events-none absolute -right-40 -top-40 h-[560px] w-[560px] rounded-full opacity-25"
