@@ -12,8 +12,11 @@ export const SITE_NAME = "Orange Express";
 export const DEFAULT_DESCRIPTION =
   "Buy fresh Nagpur oranges and cold-pressed orange juice direct from a farmer-owned family orchard in Pandhurna, Madhya Pradesh. Hand-picked, no middlemen, delivered to your door.";
 
+// In-cluster service name. Never fall back to a public NodePort: during
+// `next build` there is no BACKEND_URL, and the old fallback pointed at the
+// DEV backend, so prod's prerendered sitemap listed dev products.
 function backendUrl() {
-  return process.env.BACKEND_URL ?? "http://130.210.4.172:30080";
+  return process.env.BACKEND_URL ?? "http://backend:80";
 }
 
 /** GET a backend endpoint and unwrap its { success, data } envelope. Never throws. */
