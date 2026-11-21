@@ -4,6 +4,7 @@ import com.orangy.catalog.Product;
 import com.orangy.catalog.ProductRepository;
 import com.orangy.common.exception.BadRequestException;
 import com.orangy.common.exception.ResourceNotFoundException;
+import com.orangy.review.dto.GuestReviewRequest;
 import com.orangy.review.dto.ReviewCreateRequest;
 import com.orangy.review.dto.ReviewResponse;
 import com.orangy.user.User;
@@ -51,6 +52,30 @@ public class ReviewService {
         return toResponse(reviewRepository.save(review));
     }
 
+    /** No-login review from the gift-card QR page. Held for moderation like every other review. */
+    @Transactional
+    public ReviewResponse addGuestReview(GuestReviewRequest request) {
+        UUID productId;
+        try {
+            productId = UUID.fromString(request.getProductId());
+        } catch (IllegalArgumentException e) {
+            throw new ResourceNotFoundException("Product not found");
+        }
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
+        Review review = Review.builder()
+                .product(product)
+                .reviewerName(request.getName().trim())
+                .reviewerCity(request.getCity().trim())
+                .photoUrl(request.getPhotoUrl() == null || request.getPhotoUrl().isBlank() ? null : request.getPhotoUrl())
+                .rating(request.getRating())
+                .comment(request.getComment())
+                .isApproved(false)
+                .build();
+        return toResponse(reviewRepository.save(review));
+    }
+
     @Transactional(readOnly = true)
     public Page<ReviewResponse> getApprovedReviewsForProduct(String productId, Pageable pageable) {
         return reviewRepository.findByProductIdAndIsApprovedTrue(UUID.fromString(productId), pageable)
@@ -90,7 +115,10 @@ public class ReviewService {
         return ReviewResponse.builder()
                 .id(review.getId().toString())
                 .productId(review.getProduct().getId().toString())
-                .userName(review.getUser().getName())
+                .userId(review.getUser() != null ? review.getUser().getId().toString() : null)
+                .userName(review.getUser() != null ? review.getUser().getName() : review.getReviewerName())
+                .city(review.getReviewerCity())
+                .photoUrl(review.getPhotoUrl())
                 .rating(review.getRating())
                 .comment(review.getComment())
                 .isApproved(review.isApproved())

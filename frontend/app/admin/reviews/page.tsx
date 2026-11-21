@@ -55,12 +55,18 @@ export default function AdminReviewsPage() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-3">
                     <Stars value={r.rating} />
-                    <span className="text-sm font-semibold text-ink">{r.userName ?? "Customer"}</span>
+                    <span className="text-sm font-semibold text-ink">{r.userName ?? "Customer"}{r.city && <span className="font-normal text-ink/50"> · {r.city}</span>}</span>
                     <Badge tone={r.approved ? "success" : "warning"}>{r.approved ? "Live" : "Pending"}</Badge>
                   </div>
                   <span className="text-xs text-ink/45">{new Date(r.createdAt).toLocaleDateString("en-IN")}</span>
                 </div>
                 {r.comment && <p className="mt-2 text-sm leading-relaxed text-ink/70">{r.comment}</p>}
+                {r.photoUrl && (
+                  <a href={r.photoUrl} target="_blank" rel="noopener noreferrer">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={r.photoUrl} alt="Customer photo" className="mt-3 h-32 w-auto rounded-xl object-cover" />
+                  </a>
+                )}
                 <div className="mt-3 flex gap-2">
                   {!r.approved && (
                     <Button size="sm" onClick={() => moderate.mutate({ reviewId: r.id, approved: true })}>

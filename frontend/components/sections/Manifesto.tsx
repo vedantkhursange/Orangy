@@ -36,12 +36,7 @@ export default function Manifesto() {
   );
 
   return (
-    <section id="experience" ref={ref} className="relative overflow-hidden bg-dusk py-28 md:py-40 grain">
-      {/* warm radial glow */}
-      <div
-        className="pointer-events-none absolute -right-40 -top-40 h-[560px] w-[560px] rounded-full opacity-25"
-        style={{ background: "radial-gradient(circle, #f4771f 0%, transparent 65%)" }}
-      />
+    <section id="experience" data-orange="right" data-anim="tumble" data-x="0.34" data-y="-0.12" data-scale="0.64" ref={ref} className="relative overflow-hidden py-28 md:py-40">
       <div className="mx-auto max-w-6xl px-6 md:px-10">
         <p className="mb-8 text-xs font-semibold uppercase tracking-[0.35em] text-orange-glow">
           {manifesto.kicker}

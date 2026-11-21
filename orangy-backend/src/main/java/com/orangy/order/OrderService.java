@@ -7,6 +7,7 @@ import com.orangy.catalog.ProductVariant;
 import com.orangy.catalog.ProductVariantRepository;
 import com.orangy.common.exception.BadRequestException;
 import com.orangy.common.exception.ResourceNotFoundException;
+import com.orangy.order.dto.GuestOrderRequest;
 import com.orangy.order.dto.OrderCreateRequest;
 import com.orangy.order.dto.OrderItemResponse;
 import com.orangy.order.dto.OrderResponse;
@@ -14,6 +15,7 @@ import com.orangy.order.dto.PaymentFailureRequest;
 import com.orangy.order.dto.PaymentVerificationRequest;
 import com.orangy.user.User;
 import com.orangy.user.UserRepository;
+import com.orangy.user.dto.AddressRequest;
 import com.orangy.user.dto.AddressResponse;
 import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
@@ -29,7 +31,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -59,36 +63,68 @@ public class OrderService {
         if (cart.getItems().isEmpty()) {
             throw new BadRequestException("Cart is empty");
         }
+        List<GuestOrderRequest.Line> lines = cart.getItems().stream()
+                .map(i -> new GuestOrderRequest.Line(i.getVariantId(), i.getQuantity()))
+                .collect(Collectors.toList());
+
+        com.orangy.order.Order newOrder = com.orangy.order.Order.builder().user(user).build();
+        com.orangy.order.Order saved = buildAndSave(newOrder, lines, request.getDeliveryAddress());
+
+        // Clear cart after successful order creation
+        cartService.clearCart(userId);
+        return toResponse(saved);
+    }
+
+    /** Checkout without an account. Prices and stock always come from the database, never the client. */
+    @Transactional
+    public OrderResponse createGuestOrder(GuestOrderRequest request) {
+        com.orangy.order.Order newOrder = com.orangy.order.Order.builder()
+                .guestName(request.getName().trim())
+                .guestPhone(request.getPhone().trim())
+                .guestEmail(request.getEmail() == null || request.getEmail().isBlank() ? null : request.getEmail().trim())
+                .build();
+        return toResponse(buildAndSave(newOrder, request.getItems(), request.getDeliveryAddress()));
+    }
+
+    private com.orangy.order.Order buildAndSave(com.orangy.order.Order newOrder,
+                                                List<GuestOrderRequest.Line> lines,
+                                                AddressRequest deliveryAddress) {
+        newOrder.setOrderStatus(OrderStatus.PENDING);
+        newOrder.setPaymentStatus(PaymentStatus.PENDING);
+
+        // merge duplicate variant lines so stock checks see the real total
+        Map<String, Integer> merged = new LinkedHashMap<>();
+        for (GuestOrderRequest.Line line : lines) {
+            merged.merge(line.getVariantId(), line.getQuantity(), Integer::sum);
+        }
 
         BigDecimal subtotal = BigDecimal.ZERO;
-        com.orangy.order.Order newOrder = com.orangy.order.Order.builder()
-                .user(user)
-                .orderStatus(OrderStatus.PENDING)
-                .paymentStatus(PaymentStatus.PENDING)
-                .build();
+        for (Map.Entry<String, Integer> line : merged.entrySet()) {
+            UUID variantId;
+            try {
+                variantId = UUID.fromString(line.getKey());
+            } catch (IllegalArgumentException e) {
+                throw new BadRequestException("Invalid item in basket");
+            }
+            int qty = line.getValue();
+            ProductVariant variant = variantRepository.findById(variantId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Item no longer available: " + line.getKey()));
 
-        // Map cart items to order items and update stock
-        for (CartItem cItem : cart.getItems()) {
-            ProductVariant variant = variantRepository.findById(UUID.fromString(cItem.getVariantId()))
-                    .orElseThrow(() -> new ResourceNotFoundException("Variant not found: " + cItem.getVariantId()));
-
-            if (variant.getStockCount() < cItem.getQuantity()) {
+            if (variant.getStockCount() < qty) {
                 throw new BadRequestException("Insufficient stock for " + variant.getProduct().getName());
             }
-            variant.setStockCount(variant.getStockCount() - cItem.getQuantity());
+            variant.setStockCount(variant.getStockCount() - qty);
             variantRepository.save(variant);
 
-            BigDecimal itemTotal = variant.getPrice().multiply(BigDecimal.valueOf(cItem.getQuantity()));
-            subtotal = subtotal.add(itemTotal);
+            subtotal = subtotal.add(variant.getPrice().multiply(BigDecimal.valueOf(qty)));
 
-            OrderItem orderItem = OrderItem.builder()
+            newOrder.addItem(OrderItem.builder()
                     .variant(variant)
                     .productName(variant.getProduct().getName())
                     .variantLabel(variant.getLabel())
                     .unitPrice(variant.getPrice())
-                    .quantity(cItem.getQuantity())
-                    .build();
-            newOrder.addItem(orderItem);
+                    .quantity(qty)
+                    .build());
         }
 
         // Calculate totals
@@ -97,13 +133,12 @@ public class OrderService {
         newOrder.setDeliveryFee(subtotal.compareTo(new BigDecimal("500")) > 0 ? BigDecimal.ZERO : new BigDecimal("50"));
         newOrder.setTotalAmount(newOrder.getSubtotal().add(newOrder.getTax()).add(newOrder.getDeliveryFee()));
 
-        // Set Address
         OrderAddress address = new OrderAddress();
-        address.setDeliveryLine1(request.getDeliveryAddress().getLine1());
-        address.setDeliveryLine2(request.getDeliveryAddress().getLine2());
-        address.setDeliveryCity(request.getDeliveryAddress().getCity());
-        address.setDeliveryState(request.getDeliveryAddress().getState());
-        address.setDeliveryPincode(request.getDeliveryAddress().getPincode());
+        address.setDeliveryLine1(deliveryAddress.getLine1());
+        address.setDeliveryLine2(deliveryAddress.getLine2());
+        address.setDeliveryCity(deliveryAddress.getCity());
+        address.setDeliveryState(deliveryAddress.getState());
+        address.setDeliveryPincode(deliveryAddress.getPincode());
         newOrder.setDeliveryAddress(address);
 
         // Create Razorpay Order
@@ -113,7 +148,7 @@ public class OrderService {
             orderRequest.put("amount", newOrder.getTotalAmount().multiply(new BigDecimal("100")).intValue());
             orderRequest.put("currency", "INR");
             orderRequest.put("receipt", "txn_" + System.currentTimeMillis());
-            
+
             Order razorpayOrder = razorpayClient.orders.create(orderRequest);
             newOrder.setRazorpayOrderId(razorpayOrder.get("id"));
         } catch (Exception e) {
@@ -122,12 +157,7 @@ public class OrderService {
             newOrder.setRazorpayOrderId("order_mock_" + System.currentTimeMillis());
         }
 
-        com.orangy.order.Order savedOrder = orderRepository.save(newOrder);
-
-        // Clear cart after successful order creation
-        cartService.clearCart(userId);
-
-        return toResponse(savedOrder);
+        return orderRepository.save(newOrder);
     }
 
     @Transactional
@@ -150,9 +180,7 @@ public class OrderService {
             com.orangy.order.Order order = orderRepository.findByRazorpayOrderId(request.getRazorpayOrderId())
                     .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-            if (!order.getUser().getId().equals(userId)) {
-                throw new BadRequestException("Order does not belong to user");
-            }
+            assertOwner(order, userId);
 
             order.setPaymentStatus(PaymentStatus.PAID);
             order.setOrderStatus(OrderStatus.CONFIRMED);
@@ -173,9 +201,7 @@ public class OrderService {
         com.orangy.order.Order order = orderRepository.findByRazorpayOrderId(request.getRazorpayOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-        if (!order.getUser().getId().equals(userId)) {
-            throw new BadRequestException("Order does not belong to user");
-        }
+        assertOwner(order, userId);
 
         if (order.getPaymentStatus() != PaymentStatus.PAID) {
             order.setPaymentStatus(PaymentStatus.FAILED);
@@ -191,7 +217,7 @@ public class OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         // Allow admins or the order owner to view it
-        if (!order.getUser().getId().equals(userId)) {
+        if (order.getUser() == null || !order.getUser().getId().equals(userId)) {
             // Need a way to check if user is admin, for now just restrict to owner.
             // In a real app, you'd check roles. We will rely on controller-level security for admins.
             User currentUser = userRepository.findById(userId).orElseThrow();
@@ -206,6 +232,31 @@ public class OrderService {
     @Transactional(readOnly = true)
     public Page<OrderResponse> getUserOrders(UUID userId, Pageable pageable) {
         return orderRepository.findByUserId(userId, pageable).map(this::toResponse);
+    }
+
+    /** Guest order lookup: the order id alone is not enough, the phone number must match too. */
+    @Transactional(readOnly = true)
+    public OrderResponse getGuestOrder(String orderId, String phone) {
+        UUID id;
+        try {
+            id = UUID.fromString(orderId);
+        } catch (IllegalArgumentException e) {
+            throw new ResourceNotFoundException("Order not found");
+        }
+        com.orangy.order.Order order = orderRepository.findById(id)
+                .filter(o -> o.getUser() == null && o.getGuestPhone() != null && o.getGuestPhone().equals(phone))
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        return toResponse(order);
+    }
+
+    /** userId == null means the caller is a guest and may only touch guest orders. */
+    private void assertOwner(com.orangy.order.Order order, UUID userId) {
+        boolean ok = userId == null
+                ? order.getUser() == null
+                : order.getUser() != null && order.getUser().getId().equals(userId);
+        if (!ok) {
+            throw new BadRequestException("Order does not belong to user");
+        }
     }
 
     // Admin Methods
@@ -263,6 +314,10 @@ public class OrderService {
                 .deliveryAddress(addressResponse)
                 .items(itemResponses)
                 .createdAt(order.getCreatedAt())
+                .guest(order.getUser() == null)
+                .customerName(order.getUser() != null ? order.getUser().getName() : order.getGuestName())
+                .customerPhone(order.getUser() != null ? order.getUser().getPhone() : order.getGuestPhone())
+                .customerEmail(order.getUser() != null ? order.getUser().getEmail() : order.getGuestEmail())
                 .build();
     }
 }

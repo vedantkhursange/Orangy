@@ -21,7 +21,7 @@ export function Button({
   const variants = {
     primary: "bg-brand text-white hover:brightness-95 shadow-[0_8px_20px_-8px] shadow-brand/60",
     action: "bg-action text-white hover:bg-action-deep shadow-[0_8px_20px_-8px] shadow-action/60",
-    outline: "border-2 border-line bg-surface text-ink hover:border-brand hover:text-brand-deep",
+    outline: "border border-white/20 bg-white/5 text-ink backdrop-blur-md hover:border-brand hover:text-brand-deep",
     ghost: "text-ink/75 hover:bg-surface-2 hover:text-ink",
     danger: "bg-danger text-white hover:brightness-95",
   };
@@ -79,7 +79,7 @@ export function Select({ className = "", children, ...rest }: SelectHTMLAttribut
 /* ── Card / Badge ── */
 export function Card({ className = "", children }: { className?: string; children: ReactNode }) {
   return (
-    <div className={`rounded-3xl border border-line bg-surface shadow-card ${className}`}>
+    <div className={`glass rounded-3xl ${className}`}>
       {children}
     </div>
   );
@@ -94,7 +94,7 @@ export function Badge({
 }) {
   const tones = {
     neutral: "bg-surface-2 text-muted",
-    success: "bg-action/12 text-action",
+    success: "bg-leaf/15 text-leaf",
     warning: "bg-orange-glow/25 text-brand-deep",
     danger: "bg-danger/12 text-danger",
     orange: "bg-brand/12 text-brand-deep",
@@ -165,7 +165,7 @@ export function Dialog({
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div
         data-lenis-prevent
-        className={`relative max-h-[88vh] w-full ${wide ? "max-w-3xl" : "max-w-lg"} overflow-y-auto rounded-3xl border border-line bg-surface p-6 shadow-2xl`}
+        className={`relative max-h-[88vh] w-full ${wide ? "max-w-3xl" : "max-w-lg"} overflow-y-auto rounded-3xl glass-strong p-6 shadow-2xl`}
       >
         <div className="mb-5 flex items-center justify-between">
           <h3 className="display text-xl font-bold text-ink">{title}</h3>

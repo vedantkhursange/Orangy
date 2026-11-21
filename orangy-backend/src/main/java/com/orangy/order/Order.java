@@ -26,8 +26,13 @@ public class Order {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "user_id")
+    private User user; // null for guest checkout
+
+    // Contact details for guest orders (user == null)
+    private String guestName;
+    private String guestPhone;
+    private String guestEmail;
 
     @Column(nullable = false)
     private BigDecimal subtotal;

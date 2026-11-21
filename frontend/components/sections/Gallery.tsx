@@ -38,9 +38,7 @@ export default function Gallery() {
   }));
 
   return (
-    <section id="gallery" className="grain relative overflow-hidden bg-dusk-2 py-20 md:py-32">
-      <div className="pattern-dots-light absolute inset-0 opacity-60" />
-      <div className="pointer-events-none absolute -left-40 top-0 h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,rgb(252_116_25/0.22),transparent_65%)]" />
+    <section id="gallery" className="relative overflow-hidden py-20 md:py-32">
       <div className="relative mx-auto max-w-7xl px-5 md:px-10">
         <Reveal>
           <p data-reveal className="text-xs font-extrabold uppercase tracking-[0.25em] text-orange-glow">
@@ -76,12 +74,12 @@ export default function Gallery() {
                 <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition group-hover:opacity-100" />
                 {item.type === "VIDEO" ? (
                   <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 shadow-xl transition group-hover:scale-110">
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/55 backdrop-blur-md text-white shadow-xl transition group-hover:scale-110">
                       <Play className="ml-0.5 h-6 w-6 fill-brand text-brand" />
                     </span>
                   </span>
                 ) : (
-                  <span className="pointer-events-none absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-ink opacity-0 shadow-lg transition group-hover:opacity-100">
+                  <span className="pointer-events-none absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/55 backdrop-blur-md text-white text-ink opacity-0 shadow-lg transition group-hover:opacity-100">
                     <Expand className="h-4 w-4" />
                   </span>
                 )}

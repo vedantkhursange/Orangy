@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="p" cx="38%" cy="34%" r="70%">
+      <stop offset="0" stop-color="#ffc07a"/>
+      <stop offset=".45" stop-color="#ff8a1f"/>
+      <stop offset="1" stop-color="#d9520a"/>
+    </radialGradient>
+    <linearGradient id="l" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7ee08a"/>
+      <stop offset="1" stop-color="#1f9a4a"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="#0a0a0c"/>
+  <circle cx="37" cy="35" r="19" fill="url(#p)"/>
+  <!-- speed lines: the "express" -->
+  <path d="M7 29h8M4 35h9M8 41h7" stroke="#ff8a1f" stroke-width="2.6" stroke-linecap="round" opacity=".9"/>
+  <!-- segment highlight -->
+  <path d="M37 35 L37 19 M37 35 L51 27 M37 35 L51 43 M37 35 L37 51 M37 35 L23 43 M37 35 L23 27" stroke="#ffd9a8" stroke-width="1.2" opacity=".35"/>
+  <circle cx="37" cy="35" r="3" fill="#fff3e0" opacity=".85"/>
+  <path d="M38 16c1-5 5-8 11-8-1 6-5 9-11 8z" fill="url(#l)"/>
+  <path d="M37 17v-4" stroke="#1f9a4a" stroke-width="2.4" stroke-linecap="round"/>
+</svg>

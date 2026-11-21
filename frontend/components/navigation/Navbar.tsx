@@ -7,15 +7,13 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  Moon,
   Package,
   ShoppingCart,
-  Sun,
   User,
   X,
 } from "lucide-react";
 import { brand } from "@/data/site";
-import { useAuth, useCart, useTheme } from "@/components/providers/Providers";
+import { useAuth, useCart } from "@/components/providers/Providers";
 
 const links = [
   { label: "Home", href: "/" },
@@ -23,6 +21,7 @@ const links = [
   { label: "Our Story", href: "/#story" },
   { label: "Gallery", href: "/#gallery" },
   { label: "Contact", href: "/contact" },
+  { label: "Track order", href: "/track" },
 ];
 
 /**
@@ -36,7 +35,6 @@ export default function Navbar({ solid = false }: { solid?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
-  const { theme, toggle } = useTheme();
   const { data: cart } = useCart();
   const router = useRouter();
   const pathname = usePathname();
@@ -63,19 +61,21 @@ export default function Navbar({ solid = false }: { solid?: boolean }) {
   }, [pathname]);
 
   const cartCount = cart?.items?.reduce((n, i) => n + i.quantity, 0) ?? 0;
-  const onDark = !scrolled; // transparent over the dark film hero
-  const linkColor = onDark ? "text-white/85 hover:text-white" : "text-ink/75 hover:text-orange-deep";
-  const iconColor = onDark ? "text-white/90 hover:text-white" : "text-ink/70 hover:text-orange-deep";
+  const onDark = true; // the whole site is black & orange
+  const linkColor = "text-white/75 hover:text-white";
+  const iconColor = "text-white/85 hover:text-orange";
 
   return (
     <header
       className={[
         "fixed inset-x-0 top-0 z-50 transition-all duration-500",
-        scrolled ? "bg-cream/85 shadow-[0_1px_0_rgba(43,32,24,0.08)] backdrop-blur-md" : "bg-transparent",
+        scrolled ? "border-b border-white/10 bg-black/55 backdrop-blur-2xl backdrop-saturate-150" : "bg-transparent",
       ].join(" ")}
     >
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:h-[72px] md:px-8">
-        <Link href="/" className={`display text-xl font-bold tracking-[0.18em] ${onDark ? "text-white" : "text-orange-deep"}`}>
+        <Link href="/" className="display flex items-center gap-2.5 text-base font-bold tracking-[0.16em] text-white sm:text-lg md:text-xl">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-mark.svg" alt="" width={36} height={36} className="h-8 w-8 rounded-[10px] md:h-9 md:w-9" />
           {brand.name}
         </Link>
 
@@ -90,14 +90,10 @@ export default function Navbar({ solid = false }: { solid?: boolean }) {
         </ul>
 
         <div className="flex items-center gap-1.5 md:gap-2">
-          <button onClick={toggle} aria-label="Toggle theme" className={`rounded-full p-2 transition ${iconColor}`}>
-            {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </button>
-
           <Link href="/cart" aria-label="Cart" className={`relative rounded-full p-2 transition ${iconColor}`}>
             <ShoppingCart className="h-5 w-5" />
             {cartCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-[18px] items-center justify-center rounded-full bg-orange px-1 text-[10px] font-bold text-white">
+              <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-orange px-1 text-[10px] font-bold text-white">
                 {cartCount}
               </span>
             )}
@@ -117,7 +113,7 @@ export default function Navbar({ solid = false }: { solid?: boolean }) {
                 <span className="hidden max-w-[110px] truncate md:block">{user.name?.split(" ")[0]}</span>
               </button>
               {menuOpen && (
-                <div className="absolute right-0 top-12 w-56 overflow-hidden rounded-2xl border border-ink/10 bg-cream shadow-xl">
+                <div className="glass-strong absolute right-0 top-12 w-56 overflow-hidden rounded-2xl shadow-2xl">
                   <div className="border-b border-ink/8 px-4 py-3">
                     <p className="truncate text-sm font-semibold text-ink">{user.name}</p>
                     <p className="truncate text-xs text-ink/50">{user.email}</p>
@@ -161,7 +157,7 @@ export default function Navbar({ solid = false }: { solid?: boolean }) {
           <button
             aria-label="Toggle menu"
             onClick={() => setOpen((v) => !v)}
-            className={`rounded-md p-2 lg:hidden ${open || !onDark ? "text-ink" : "text-white"}`}
+            className="rounded-md p-2 text-white lg:hidden"
           >
             {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
@@ -169,7 +165,7 @@ export default function Navbar({ solid = false }: { solid?: boolean }) {
       </nav>
 
       {open && (
-        <div className="border-t border-ink/5 bg-cream/95 px-5 pb-6 pt-2 backdrop-blur-md lg:hidden">
+        <div className="border-t border-white/10 bg-black/80 px-5 pb-6 pt-2 backdrop-blur-2xl lg:hidden">
           <ul className="flex flex-col gap-1">
             {links.map((l) => (
               <li key={l.label}>

@@ -28,4 +28,8 @@ public class OrderResponse {
     private AddressResponse deliveryAddress;
     private List<OrderItemResponse> items;
     private LocalDateTime createdAt;
+    private boolean guest;
+    private String customerName;
+    private String customerPhone;
+    private String customerEmail;
 }

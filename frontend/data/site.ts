@@ -115,20 +115,48 @@ export const finalCta = {
   secondary: "Explore Orange Express",
 };
 
+/**
+ * Social profiles. Placeholders until the real handles are shared: set `href`
+ * to the profile URL and the icon goes live in the footer. Empty href = hidden.
+ */
+export const social: { label: "Instagram" | "YouTube" | "Facebook" | "WhatsApp" | "X"; href: string }[] = [
+  { label: "Instagram", href: "" },
+  { label: "YouTube", href: "" },
+  { label: "Facebook", href: "" },
+  { label: "WhatsApp", href: "" },
+];
+
+/** Contact details shown in the footer, contact page and gift card. */
+export const contact = {
+  farm: "Khursange Farms",
+  address: "Pandhurna, Madhya Pradesh 480334",
+  plusCode: "JGCC+WCV Sawargaon, Madhya Pradesh",
+  phone: "", // e.g. "+91 98765 43210" (TODO: share the real number)
+  email: "", // e.g. "hello@orangeexpress.in"
+  website: "orangeexpress.in",
+  mapsLink: "https://www.google.com/maps/search/?api=1&query=JGCC%2BWCV+Sawargaon,+Madhya+Pradesh",
+};
+
 export const footer = {
   blurb: "Premium oranges and fresh-pressed juice from a family orchard that still does things the slow way.",
   columns: [
     {
       title: "Shop",
-      links: ["Fresh Oranges", "Premium Reserve", "Orange Juice", "Citrus Collection"],
+      links: [
+        { label: "All products", href: "/products" },
+        { label: "Your basket", href: "/cart" },
+        { label: "Track an order", href: "/track" },
+        { label: "Write a review", href: "/review" },
+      ],
     },
     {
       title: "Company",
-      links: ["Our Story", "Our Orchard", "Sustainability", "Contact"],
-    },
-    {
-      title: "Follow",
-      links: ["Instagram", "YouTube", "Pinterest"],
+      links: [
+        { label: "Our Story", href: "/#story" },
+        { label: "Gallery", href: "/#gallery" },
+        { label: "Visit the grove", href: "/contact" },
+        { label: "My account", href: "/account" },
+      ],
     },
   ],
   fineprint: "© 2026 Orange Express. Grown under the sun.",

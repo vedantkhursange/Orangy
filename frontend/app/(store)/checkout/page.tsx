@@ -7,7 +7,9 @@ import { MapPin, Plus, ShieldCheck } from "lucide-react";
 import { api, inr } from "@/lib/api";
 import { openRazorpayCheckout } from "@/lib/razorpay";
 import type { Address, AddressRequest, Order } from "@/lib/types";
-import { useAuth, useCart, useToast } from "@/components/providers/Providers";
+import Link from "next/link";
+import { useAuth, useCart, useCartActions, useToast } from "@/components/providers/Providers";
+import GuestCheckoutForm, { EMPTY_GUEST, guestReady, LAST_ORDER_KEY, type GuestDetails } from "@/components/checkout/GuestCheckoutForm";
 import AddressForm from "@/components/account/AddressForm";
 import OrderSuccessAnimation from "@/components/checkout/OrderSuccessAnimation";
 import { Badge, Button, Card, Dialog, EmptyState, Spinner } from "@/components/ui/ui";
@@ -21,6 +23,10 @@ import { Badge, Button, Card, Dialog, EmptyState, Spinner } from "@/components/u
 export default function CheckoutPage() {
   const { user, loading } = useAuth();
   const { data: cart, isLoading: cartLoading } = useCart();
+  const cartApi = useCartActions();
+  const isGuest = !loading && !user;
+  const base = isGuest ? "/api/public/orders" : "/api/orders";
+  const [guest, setGuest] = useState<GuestDetails>(EMPTY_GUEST);
   const [selected, setSelected] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [placedOrder, setPlacedOrder] = useState<Order | null>(null);
@@ -49,7 +55,7 @@ export default function CheckoutPage() {
 
   const verifyPayment = useMutation({
     mutationFn: (payload: { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string }) =>
-      api.post<Order>("/api/orders/verify-payment", payload),
+      api.post<Order>(`${base}/verify-payment`, payload),
     onSuccess: (order) => {
       setPlacedOrder(order);
       setPaymentError(null);
@@ -61,14 +67,16 @@ export default function CheckoutPage() {
 
   const reportFailure = useMutation({
     mutationFn: (payload: { razorpayOrderId: string; reason?: string }) =>
-      api.post<Order>("/api/orders/payment-failed", payload),
+      api.post<Order>(`${base}/payment-failed`, payload),
   });
 
   const launchPayment = (order: Order) => {
     setPaymentError(null);
     const selectedAddress = (addresses ?? []).find((a) => a.id === selected);
     openRazorpayCheckout(order, {
-      prefill: { name: user?.name, email: user?.email, contact: selectedAddress?.phone ?? user?.phone },
+      prefill: isGuest
+        ? { name: guest.name, email: guest.email || undefined, contact: guest.phone }
+        : { name: user?.name, email: user?.email, contact: selectedAddress?.phone ?? user?.phone },
       onSuccess: (response) =>
         verifyPayment.mutate({
           razorpayOrderId: response.razorpay_order_id,
@@ -85,11 +93,25 @@ export default function CheckoutPage() {
 
   const placeOrder = useMutation({
     mutationFn: () => {
+      if (isGuest) {
+        const { name, phone, email, ...deliveryAddress } = guest;
+        return api.post<Order>("/api/public/orders", {
+          name,
+          phone,
+          email: email || undefined,
+          deliveryAddress,
+          items: (cart?.items ?? []).map((i) => ({ variantId: i.variantId, quantity: i.quantity })),
+        });
+      }
       const address = (addresses ?? []).find((a) => a.id === selected)!;
       const { id: _id, ...deliveryAddress } = address;
       return api.post<Order>("/api/orders", { deliveryAddress });
     },
     onSuccess: (order) => {
+      if (isGuest) {
+        localStorage.setItem(LAST_ORDER_KEY, JSON.stringify({ id: order.id, phone: guest.phone }));
+        cartApi.clear();
+      }
       qc.invalidateQueries({ queryKey: ["cart"] });
       qc.invalidateQueries({ queryKey: ["orders"] });
       setPlacedOrder(order);
@@ -98,12 +120,9 @@ export default function CheckoutPage() {
     onError: (e) => toast(e instanceof Error ? e.message : "Could not place the order.", "error"),
   });
 
-  if (!loading && !user) {
-    router.push("/login");
-    return null;
-  }
+  const orderUrl = (o: Order) => (isGuest ? `/track?id=${o.id}&phone=${guest.phone}` : `/orders/${o.id}`);
 
-  if (loading || cartLoading || addrLoading) {
+  if (loading || cartLoading || (!!user && addrLoading)) {
     return <div className="flex justify-center py-24"><Spinner /></div>;
   }
 
@@ -112,7 +131,7 @@ export default function CheckoutPage() {
       <OrderSuccessAnimation
         orderId={placedOrder.id}
         totalAmount={placedOrder.totalAmount}
-        onDone={() => router.push(`/orders/${placedOrder.id}`)}
+        onDone={() => router.push(orderUrl(placedOrder))}
       />
     );
   }
@@ -145,7 +164,7 @@ export default function CheckoutPage() {
           <Button size="lg" loading={verifyPayment.isPending} onClick={() => launchPayment(placedOrder)}>
             Pay {inr(placedOrder.totalAmount)}
           </Button>
-          <Button variant="outline" size="lg" onClick={() => router.push(`/orders/${placedOrder.id}`)}>
+          <Button variant="outline" size="lg" onClick={() => router.push(orderUrl(placedOrder))}>
             View order
           </Button>
         </div>
@@ -172,7 +191,9 @@ export default function CheckoutPage() {
       <h1 className="display text-3xl font-bold text-ink">Checkout</h1>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[5fr_2fr]">
-        {/* address selection */}
+        {isGuest ? (
+          <GuestCheckoutForm value={guest} onChange={setGuest} />
+        ) : (
         <section>
           <div className="flex items-center justify-between">
             <h2 className="display text-xl font-bold text-ink">Delivery address</h2>
@@ -211,6 +232,8 @@ export default function CheckoutPage() {
           )}
         </section>
 
+        )}
+
         {/* summary */}
         <Card className="h-fit p-5">
           <h2 className="display text-lg font-bold text-ink">Order summary</h2>
@@ -231,13 +254,20 @@ export default function CheckoutPage() {
           <Button
             size="lg"
             className="mt-5 w-full"
-            disabled={!selected}
+            disabled={isGuest ? !guestReady(guest) : !selected}
             loading={placeOrder.isPending}
             onClick={() => placeOrder.mutate()}
           >
             Place Order
           </Button>
-          {!selected && <p className="mt-2 text-center text-xs text-ink/45">Select a delivery address first.</p>}
+          {isGuest
+            ? !guestReady(guest) && <p className="mt-2 text-center text-xs text-ink/45">Fill in your contact and delivery details.</p>
+            : !selected && <p className="mt-2 text-center text-xs text-ink/45">Select a delivery address first.</p>}
+          {isGuest && (
+            <p className="mt-3 text-center text-xs text-ink/50">
+              No account needed. <Link href="/login" className="font-semibold text-orange hover:underline">Log in</Link> to use saved addresses.
+            </p>
+          )}
           <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink/40">
             <ShieldCheck className="h-3.5 w-3.5" /> UPI, cards &amp; wallets via Razorpay
           </p>

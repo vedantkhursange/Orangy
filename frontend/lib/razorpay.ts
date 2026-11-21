@@ -65,7 +65,7 @@ function loadRazorpayScript(): Promise<void> {
   return loadPromise;
 }
 
-const BRAND_ORANGE = "#f4771f";
+const BRAND_ORANGE = "#ff7a1a";
 
 export async function openRazorpayCheckout(
   order: Order,
