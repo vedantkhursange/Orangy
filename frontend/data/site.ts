@@ -131,7 +131,7 @@ export const contact = {
   farm: "Khursange Farms",
   address: "Pandhurna, Madhya Pradesh 480334",
   plusCode: "JGCC+WCV Sawargaon, Madhya Pradesh",
-  phone: "", // e.g. "+91 98765 43210" (TODO: share the real number)
+  phone: "+91 98937 57422",
   email: "", // e.g. "hello@orangeexpress.in"
   website: "orangeexpress.in",
   mapsLink: "https://www.google.com/maps/search/?api=1&query=JGCC%2BWCV+Sawargaon,+Madhya+Pradesh",

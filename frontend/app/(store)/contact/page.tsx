@@ -1,5 +1,6 @@
 import { pageMeta } from "@/lib/seo";
-import { MapPin, Navigation } from "lucide-react";
+import { MapPin, Navigation, Phone } from "lucide-react";
+import { contact } from "@/data/site";
 import { Button, Card } from "@/components/ui/ui";
 
 const PLUS_CODE = "JGCC+WCV Sawargaon, Madhya Pradesh";
@@ -34,6 +35,12 @@ export default function ContactPage() {
               <p className="mt-1 text-xs text-ink/45">Plus Code: {PLUS_CODE}</p>
             </div>
           </div>
+
+          {contact.phone && (
+            <a href={`tel:${contact.phone.replace(/\s/g, "")}`} className="mt-4 flex items-center gap-3 text-sm text-ink/75 transition hover:text-orange">
+              <Phone className="h-5 w-5 shrink-0 text-orange-deep" /> {contact.phone}
+            </a>
+          )}
 
           <a href={MAPS_LINK} target="_blank" rel="noreferrer" className="mt-6 block">
             <Button variant="outline" size="sm" className="w-full">
