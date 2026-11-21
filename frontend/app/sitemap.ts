@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL, getAllProducts } from "@/lib/seo";
 
-// Rebuilt at most hourly so new products show up without a redeploy.
-export const revalidate = 3600;
+// Rendered at request time (never at build, where no backend is reachable);
+// the product list fetch itself is cached for an hour in lib/seo.ts.
+export const dynamic = "force-dynamic";
 
 /** Public, indexable routes. Account, cart and checkout pages are noindex. */
 const ROUTES = [
