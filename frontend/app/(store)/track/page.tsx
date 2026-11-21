@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import TrackOrder from "./TrackOrder";
 
 export const metadata: Metadata = {
-  title: "Track your order — Orange Express",
+  title: "Track your order",
   robots: { index: false },
 };
 

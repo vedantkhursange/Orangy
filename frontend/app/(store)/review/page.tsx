@@ -1,12 +1,12 @@
-import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import { Suspense } from "react";
 import ReviewLanding from "./ReviewLanding";
 
-export const metadata: Metadata = {
-  title: "Rate your oranges — Orange Express",
+export const metadata = pageMeta({
+  title: "Rate your oranges",
   description: "Tell us how your Orange Express oranges tasted. No account needed.",
-  alternates: { canonical: "/review" },
-};
+  path: "/review",
+});
 
 export default function ReviewPage() {
   return (

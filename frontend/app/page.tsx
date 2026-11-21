@@ -8,10 +8,20 @@ import OurStory from "@/components/sections/OurStory";
 import Gallery from "@/components/sections/Gallery";
 import FinalCta from "@/components/sections/FinalCta";
 import Footer from "@/components/sections/Footer";
+import { DEFAULT_DESCRIPTION, jsonLd, siteJsonLd } from "@/lib/seo";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  // absolute: the home page carries the full brand title, not the template
+  title: { absolute: "Orange Express | Fresh Oranges & Juice Direct from the Farm" },
+  description: DEFAULT_DESCRIPTION,
+  alternates: { canonical: "/" },
+};
 
 export default function Home() {
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(siteJsonLd())} />
       <OrangeStage />
       <main id="main" className="relative">
         <Navbar />

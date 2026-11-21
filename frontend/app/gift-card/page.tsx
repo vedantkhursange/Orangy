@@ -4,7 +4,7 @@ import { brand, contact } from "@/data/site";
 import PrintButton from "./PrintButton";
 
 export const metadata: Metadata = {
-  title: "Gift card — Orange Express",
+  title: "Gift card",
   robots: { index: false, follow: false },
 };
 
