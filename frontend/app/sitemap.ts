@@ -1,15 +1,26 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL, getAllProducts } from "@/lib/seo";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://orangeexpress.in";
+// Rebuilt at most hourly so new products show up without a redeploy.
+export const revalidate = 3600;
 
-/** Public, indexable routes. Product detail pages are intentionally excluded —
- *  they are backend-driven and would need a fetch at build time. */
-const ROUTES = ["", "/products", "/contact", "/login", "/signup"] as const;
+/** Public, indexable routes. Account, cart and checkout pages are noindex. */
+const ROUTES = [
+  { path: "", priority: 1, changeFrequency: "weekly" },
+  { path: "/products", priority: 0.9, changeFrequency: "daily" },
+  { path: "/contact", priority: 0.6, changeFrequency: "monthly" },
+  { path: "/review", priority: 0.4, changeFrequency: "monthly" },
+] as const;
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  return ROUTES.map((path) => ({
-    url: `${SITE_URL}${path}`,
-    changeFrequency: path === "" ? "weekly" : "monthly",
-    priority: path === "" ? 1 : 0.7,
-  }));
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const products = (await getAllProducts())?.content ?? [];
+  return [
+    ...ROUTES.map((r) => ({ url: `${SITE_URL}${r.path}`, changeFrequency: r.changeFrequency, priority: r.priority })),
+    ...products.map((p) => ({
+      url: `${SITE_URL}/products/${p.id}`,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+      ...(p.thumbnailUrl ? { images: [p.thumbnailUrl] } : {}),
+    })),
+  ];
 }

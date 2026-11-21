@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/seo";
 import { MapPin, Navigation } from "lucide-react";
 import { Button, Card } from "@/components/ui/ui";
 
@@ -5,6 +6,13 @@ const PLUS_CODE = "JGCC+WCV Sawargaon, Madhya Pradesh";
 const MAPS_QUERY = "JGCC%2BWCV+Sawargaon,+Madhya+Pradesh";
 const MAPS_EMBED_SRC = `https://www.google.com/maps?q=${MAPS_QUERY}&t=k&z=18&output=embed`;
 const MAPS_LINK = `https://www.google.com/maps/search/?api=1&query=${MAPS_QUERY}`;
+
+export const metadata = pageMeta({
+  title: "Contact & Visit Our Orange Grove",
+  description:
+    "Visit Khursange Farms, the family orchard behind Orange Express, in Pandhurna, Madhya Pradesh 480334. Directions, map and how to reach us.",
+  path: "/contact",
+});
 
 export default function ContactPage() {
   return (
