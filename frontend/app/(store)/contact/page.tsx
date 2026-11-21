@@ -1,5 +1,6 @@
 import { pageMeta } from "@/lib/seo";
-import { MapPin, Navigation } from "lucide-react";
+import { MapPin, Navigation, Phone } from "lucide-react";
+import { contact } from "@/data/site";
 import { Button, Card } from "@/components/ui/ui";
 
 const PLUS_CODE = "JGCC+WCV Sawargaon, Madhya Pradesh";
@@ -10,7 +11,7 @@ const MAPS_LINK = `https://www.google.com/maps/search/?api=1&query=${MAPS_QUERY}
 export const metadata = pageMeta({
   title: "Contact & Visit Our Orange Grove",
   description:
-    "Visit Khursange Farms, the family orchard behind Orange Express, in Pandhurna, Madhya Pradesh 480334. Directions, map and how to reach us.",
+    "Visit Khursange Farms, the family orchard behind Orange Express, in Pandhurna, Madhya Pradesh 480334. Call +91 98937 57422 or get directions and the map.",
   path: "/contact",
 });
 
@@ -34,6 +35,12 @@ export default function ContactPage() {
               <p className="mt-1 text-xs text-ink/45">Plus Code: {PLUS_CODE}</p>
             </div>
           </div>
+
+          {contact.phone && (
+            <a href={`tel:${contact.phone.replace(/\s/g, "")}`} className="mt-4 flex items-start gap-3 text-sm text-ink/75 hover:text-orange-deep">
+              <Phone className="mt-0.5 h-5 w-5 shrink-0 text-orange-deep" /> {contact.phone}
+            </a>
+          )}
 
           <a href={MAPS_LINK} target="_blank" rel="noreferrer" className="mt-6 block">
             <Button variant="outline" size="sm" className="w-full">
