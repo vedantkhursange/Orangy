@@ -41,6 +41,8 @@ export type ProductSummary = {
   startingPrice: number | null;
   thumbnailUrl: string | null;
   featured: boolean;
+  /** false when every pack is sold out (older backends omit it) */
+  inStock?: boolean;
 };
 
 export type Variant = {

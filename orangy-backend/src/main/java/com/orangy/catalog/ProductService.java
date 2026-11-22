@@ -153,6 +153,7 @@ public class ProductService {
                 .startingPrice(startingPrice)
                 .thumbnailUrl(thumbnail)
                 .featured(product.isFeatured())
+                .inStock(product.getVariants().stream().anyMatch(v -> v.getStockCount() > 0))
                 .build();
     }
 

@@ -10,6 +10,7 @@ import type { ProductSummary } from "@/lib/types";
  * name + one muted line underneath. The whole card is the link.
  */
 export default function ProductCard({ product, size = "md" }: { product: ProductSummary; size?: "md" | "lg" }) {
+  const soldOut = product.inStock === false;
   return (
     <Link href={`/products/${product.id}`} className="group block rounded-3xl outline-offset-4 transition active:scale-[0.98]">
       <div
@@ -25,7 +26,7 @@ export default function ProductCard({ product, size = "md" }: { product: Product
             alt={product.name}
             loading="lazy"
             onError={(e) => { e.currentTarget.style.display = "none"; }}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+            className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05] ${soldOut ? "opacity-60 grayscale-[35%]" : ""}`}
           />
         ) : (
           <div className="flex h-full items-center justify-center">
@@ -35,6 +36,11 @@ export default function ProductCard({ product, size = "md" }: { product: Product
         {product.category && (
           <span className="absolute left-3 top-3 rounded-lg bg-black/60 px-2 py-1 backdrop-blur-md text-[10px] font-extrabold uppercase tracking-wider text-brand-deep shadow-sm">
             {product.category}
+          </span>
+        )}
+        {soldOut && (
+          <span className="absolute right-3 top-3 rounded-lg bg-black/75 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-sm backdrop-blur-md">
+            Out of stock
           </span>
         )}
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent px-4 pb-3 pt-10">

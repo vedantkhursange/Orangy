@@ -20,4 +20,6 @@ public class ProductSummaryResponse {
     private BigDecimal startingPrice;
     private String thumbnailUrl;
     private boolean featured;
+    /** true when at least one pack has stock left */
+    private boolean inStock;
 }
